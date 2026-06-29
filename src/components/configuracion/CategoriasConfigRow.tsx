@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronRight, Tag } from "lucide-react";
-import GestionCategoriasSheet from "./GestionCategoriasSheet";
+import CategoriasOverlay from "./CategoriasOverlay";
 
 export default function CategoriasConfigRow() {
   const [abierto, setAbierto] = useState(false);
@@ -21,7 +21,7 @@ export default function CategoriasConfigRow() {
         <ChevronRight size={18} className="text-ink-faint" />
       </button>
 
-      <GestionCategoriasSheet abierto={abierto} onCerrar={() => setAbierto(false)} />
+      <CategoriasOverlay abierto={abierto} onCerrar={() => setAbierto(false)} />
     </>
   );
 }

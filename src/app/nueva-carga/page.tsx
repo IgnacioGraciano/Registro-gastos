@@ -148,8 +148,8 @@ export default function NuevaCargaPage() {
 
   return (
     <div className="relative flex h-full flex-col">
-      {/* ── Bloque superior fijo: tipo + monto + teclado ── */}
-      <div className="shrink-0 px-5 pt-[calc(var(--safe-top)+14px)]">
+      {/* ── Todo en un único bloque con scroll: al deslizar hacia abajo, el teclado se va con el resto ── */}
+      <div className="no-scrollbar scroll-contenido min-h-0 flex-1 overflow-y-auto px-5 pb-3 pt-[calc(var(--safe-top)+14px)]">
         <h1 className="text-center text-[13px] font-semibold uppercase tracking-wide text-ink-faint">
           Nueva carga
         </h1>
@@ -213,12 +213,9 @@ export default function NuevaCargaPage() {
             </button>
           ))}
         </div>
-      </div>
 
-      {/* ── Bloque medio, scrolleable: billetera / categoría / fecha / descripción ── */}
-      <div className="no-scrollbar scroll-contenido min-h-0 flex-1 overflow-y-auto px-5 pb-3 pt-4">
         {/* Billetera (obligatorio) */}
-        <section className="mb-4">
+        <section className="mb-4 mt-5">
           <h2 className="mb-2 px-0.5 text-[13px] font-semibold text-ink">
             ¿De dónde sale / entra?
           </h2>

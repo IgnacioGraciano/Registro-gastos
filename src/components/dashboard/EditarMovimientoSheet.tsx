@@ -99,7 +99,33 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
   }
 
   return (
-    <BottomSheet abierto={transaccion !== null} onCerrar={onCerrar} titulo="Editar movimiento">
+    <BottomSheet
+      abierto={transaccion !== null}
+      onCerrar={onCerrar}
+      titulo="Editar movimiento"
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={guardar}
+            disabled={!puedeGuardar}
+            className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white ${
+              puedeGuardar ? "bg-brand" : "bg-brand/25"
+            }`}
+          >
+            Guardar cambios
+          </button>
+          <button
+            type="button"
+            onClick={eliminar}
+            className="ios-press mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-ios py-2 text-[13px] font-semibold text-expense"
+          >
+            <Trash2 size={14} />
+            Eliminar movimiento
+          </button>
+        </>
+      }
+    >
       <div className="flex flex-col gap-4">
         {/* Toggle Gasto / Ingreso */}
         <div className="relative grid grid-cols-2 rounded-full bg-surface-line p-1">
@@ -237,26 +263,6 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
         </div>
 
         {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
-
-        <button
-          type="button"
-          onClick={guardar}
-          disabled={!puedeGuardar}
-          className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white ${
-            puedeGuardar ? "bg-brand" : "bg-brand/25"
-          }`}
-        >
-          Guardar cambios
-        </button>
-
-        <button
-          type="button"
-          onClick={eliminar}
-          className="ios-press flex w-full items-center justify-center gap-1.5 rounded-ios py-2.5 text-[13px] font-semibold text-expense"
-        >
-          <Trash2 size={14} />
-          Eliminar movimiento
-        </button>
       </div>
     </BottomSheet>
   );

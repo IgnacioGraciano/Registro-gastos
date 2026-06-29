@@ -78,7 +78,25 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
   }
 
   return (
-    <BottomSheet abierto={abierto} onCerrar={onCerrar} titulo="Nueva suscripción">
+    <BottomSheet
+      abierto={abierto}
+      onCerrar={onCerrar}
+      titulo="Nueva suscripción"
+      footer={
+        !exito && (
+          <button
+            type="button"
+            onClick={guardar}
+            disabled={!puedeGuardar}
+            className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white transition-colors ${
+              puedeGuardar ? "bg-brand" : "bg-brand/25"
+            }`}
+          >
+            Crear suscripción
+          </button>
+        )
+      }
+    >
       {exito ? (
         <div className="flex flex-col items-center gap-3 py-8">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white shadow-fab animate-pop-in">
@@ -203,17 +221,6 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
           </div>
 
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
-
-          <button
-            type="button"
-            onClick={guardar}
-            disabled={!puedeGuardar}
-            className={`ios-press mt-1 w-full rounded-ios py-3.5 text-[15px] font-bold text-white transition-colors ${
-              puedeGuardar ? "bg-brand" : "bg-brand/25"
-            }`}
-          >
-            Crear suscripción
-          </button>
         </div>
       )}
     </BottomSheet>

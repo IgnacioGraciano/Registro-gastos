@@ -164,7 +164,34 @@ export default function PresupuestosSection() {
         </div>
       )}
 
-      <BottomSheet abierto={sheetAbierta} onCerrar={() => setSheetAbierta(false)} titulo="Presupuesto">
+      <BottomSheet
+        abierto={sheetAbierta}
+        onCerrar={() => setSheetAbierta(false)}
+        titulo="Presupuesto"
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={guardar}
+              disabled={!categoriaId || !montoStr.trim()}
+              className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white ${
+                categoriaId && montoStr.trim() ? "bg-brand" : "bg-brand/25"
+              }`}
+            >
+              Guardar presupuesto
+            </button>
+            {categoriaId && presupuestosRepo.porCategoria(categoriaId) && (
+              <button
+                type="button"
+                onClick={eliminar}
+                className="ios-press mt-1.5 w-full rounded-ios py-2 text-[13px] font-semibold text-expense"
+              >
+                Eliminar presupuesto
+              </button>
+            )}
+          </>
+        }
+      >
         <div className="flex flex-col gap-4">
           <div>
             <p className="mb-2 text-[13px] font-semibold text-ink">Categoría</p>
@@ -206,27 +233,6 @@ export default function PresupuestosSection() {
           </div>
 
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
-
-          <button
-            type="button"
-            onClick={guardar}
-            disabled={!categoriaId || !montoStr.trim()}
-            className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white ${
-              categoriaId && montoStr.trim() ? "bg-brand" : "bg-brand/25"
-            }`}
-          >
-            Guardar presupuesto
-          </button>
-
-          {categoriaId && presupuestosRepo.porCategoria(categoriaId) && (
-            <button
-              type="button"
-              onClick={eliminar}
-              className="ios-press w-full rounded-ios py-2.5 text-[13px] font-semibold text-expense"
-            >
-              Eliminar presupuesto
-            </button>
-          )}
         </div>
       </BottomSheet>
     </section>

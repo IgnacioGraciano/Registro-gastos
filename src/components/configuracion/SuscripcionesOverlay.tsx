@@ -83,18 +83,10 @@ export default function SuscripcionesOverlay({ abierto, onCerrar }: Props) {
         </section>
 
         {ordenadasPorProximoPago.length > 0 && (
-          <p className="mt-2 px-1 text-center text-[11.5px] text-ink-faint">
+          <p className="mb-[calc(var(--safe-bottom)+12px)] mt-2 px-1 text-center text-[11.5px] text-ink-faint">
             Deslizá una suscripción hacia la izquierda para eliminarla.
           </p>
         )}
-
-        <button
-          type="button"
-          onClick={() => setModalAbierto(true)}
-          className="ios-press mb-[calc(var(--safe-bottom)+8px)] mt-4 w-full rounded-ios border border-dashed border-surface-line py-3.5 text-[14px] font-semibold text-accent"
-        >
-          + Agregar suscripción
-        </button>
       </div>
 
       <NuevaSuscripcionModal abierto={modalAbierto} onCerrar={() => setModalAbierto(false)} />

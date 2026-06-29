@@ -48,7 +48,39 @@ export default function TransferenciaModal({ abierto, onCerrar, billeteras }: Pr
   }
 
   return (
-    <BottomSheet abierto={abierto} onCerrar={onCerrar} titulo="Transferir entre cuentas">
+    <BottomSheet
+      abierto={abierto}
+      onCerrar={onCerrar}
+      titulo="Transferir entre cuentas"
+      footer={
+        !exito && (
+          <>
+            <button
+              type="button"
+              onClick={confirmar}
+              disabled={!puedeConfirmar}
+              className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white transition-colors ${
+                puedeConfirmar ? "bg-brand" : "bg-brand/25"
+              }`}
+            >
+              Confirmar transferencia
+            </button>
+            {origenId && destinoId && Number.isFinite(monto) && monto > 0 && (
+              <p className="mt-2 text-center text-[12px] text-ink-faint">
+                {formatMonto(monto, moneda)} de{" "}
+                <span className="font-medium text-ink">
+                  {billeteras.find((b) => b.id === origenId)?.nombre}
+                </span>{" "}
+                a{" "}
+                <span className="font-medium text-ink">
+                  {billeteras.find((b) => b.id === destinoId)?.nombre}
+                </span>
+              </p>
+            )}
+          </>
+        )
+      }
+    >
       {exito ? (
         <div className="flex flex-col items-center gap-3 py-8">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white shadow-fab animate-pop-in">
@@ -127,31 +159,6 @@ export default function TransferenciaModal({ abierto, onCerrar, billeteras }: Pr
           </div>
 
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
-
-          <button
-            type="button"
-            onClick={confirmar}
-            disabled={!puedeConfirmar}
-            className={`ios-press mt-1 w-full rounded-ios py-3.5 text-[15px] font-bold text-white transition-colors ${
-              puedeConfirmar ? "bg-brand" : "bg-brand/25"
-            }`}
-          >
-            Confirmar transferencia
-          </button>
-
-          {origenId && destinoId && Number.isFinite(monto) && monto > 0 && (
-            <p className="text-center text-[12px] text-ink-faint">
-              Se va a registrar {formatMonto(monto, moneda)} desde{" "}
-              <span className="font-medium text-ink">
-                {billeteras.find((b) => b.id === origenId)?.nombre}
-              </span>{" "}
-              hacia{" "}
-              <span className="font-medium text-ink">
-                {billeteras.find((b) => b.id === destinoId)?.nombre}
-              </span>
-              .
-            </p>
-          )}
         </div>
       )}
     </BottomSheet>
