@@ -228,12 +228,12 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
       </div>
 
       {!exito && (
-        <div className="shrink-0 border-t border-surface-line bg-surface-base px-5 pb-[calc(var(--safe-bottom)+16px)] pt-3">
+        <div className="shrink-0 border-t border-surface-line bg-surface-base px-5 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)] pt-3">
           <button
             type="button"
             onClick={guardar}
             disabled={!puedeGuardar}
-            className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white transition-colors ${
+            className={`ios-press w-full rounded-ios py-4 text-[16px] font-bold text-white transition-colors duration-200 ${
               puedeGuardar ? "bg-brand" : "bg-brand/25"
             }`}
           >

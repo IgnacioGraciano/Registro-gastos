@@ -93,7 +93,7 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
         </div>
 
         {/* Lista */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)]">
           {categoriasDelTipo.length === 0 && (
             <p className="py-6 text-center text-[13px] text-ink-faint">
               Todavía no hay categorías de {tipoActivo === "gasto" ? "gastos" : "ingresos"}.

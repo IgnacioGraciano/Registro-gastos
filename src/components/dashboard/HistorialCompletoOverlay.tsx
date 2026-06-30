@@ -76,7 +76,7 @@ export default function HistorialCompletoOverlay({
                 />
               ))}
             </div>
-            <p className="px-1 pb-[calc(var(--safe-bottom)+12px)] pt-3 text-center text-[11.5px] text-ink-faint">
+            <p className="px-1 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)] pt-3 text-center text-[11.5px] text-ink-faint">
               Tocá un movimiento para editarlo. Deslizá hacia la izquierda para eliminarlo (revierte
               el efecto en el saldo).
             </p>

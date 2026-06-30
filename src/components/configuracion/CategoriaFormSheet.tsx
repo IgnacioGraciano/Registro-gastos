@@ -137,13 +137,13 @@ export default function CategoriaFormSheet({ abierto, onCerrar, categoria, tipoN
       </div>
 
       {/* Footer SIEMPRE fijo al fondo real de la pantalla (no depende del alto del contenido) */}
-      <div className="shrink-0 border-t border-surface-line bg-surface-base px-5 pb-[calc(var(--safe-bottom)+16px)] pt-3">
-        {error && <p className="mb-2 text-center text-[12px] font-medium text-expense">{error}</p>}
+      <div className="shrink-0 border-t border-surface-line bg-surface-base px-5 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)] pt-3">
+        {error && <p className="mb-2 text-center text-[12.5px] font-medium text-expense">{error}</p>}
         <button
           type="button"
           onClick={guardar}
           disabled={!nombre.trim()}
-          className={`ios-press w-full rounded-ios py-3.5 text-[15px] font-bold text-white ${
+          className={`ios-press w-full rounded-ios py-4 text-[16px] font-bold text-white transition-colors duration-200 ${
             nombre.trim() ? "bg-brand" : "bg-brand/25"
           }`}
         >

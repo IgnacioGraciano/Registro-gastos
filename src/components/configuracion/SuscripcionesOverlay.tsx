@@ -83,7 +83,7 @@ export default function SuscripcionesOverlay({ abierto, onCerrar }: Props) {
         </section>
 
         {ordenadasPorProximoPago.length > 0 && (
-          <p className="mb-[calc(var(--safe-bottom)+12px)] mt-2 px-1 text-center text-[11.5px] text-ink-faint">
+          <p className="mb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)] mt-2 px-1 text-center text-[11.5px] text-ink-faint">
             Deslizá una suscripción hacia la izquierda para eliminarla.
           </p>
         )}
