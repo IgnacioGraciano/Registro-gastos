@@ -19,6 +19,7 @@ export { transaccionesRepo } from "./transacciones";
 export { suscripcionesRepo } from "./suscripciones";
 export { presupuestosRepo } from "./presupuestos";
 export { registrarTransferencia } from "./transferencias";
+export { exportarTodoElStorage, importarTodoElStorage } from "./storage";
 export { procesarDebitosPendientes } from "./debitos";
 export type { ResultadoDebito } from "./debitos";
 

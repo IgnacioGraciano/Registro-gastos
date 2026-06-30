@@ -3,6 +3,7 @@ import CategoriasConfigRow from "@/components/configuracion/CategoriasConfigRow"
 import MonedaConfigRow from "@/components/configuracion/MonedaConfigRow";
 import CuentasConfigRow from "@/components/configuracion/CuentasConfigRow";
 import SuscripcionesConfigRow from "@/components/configuracion/SuscripcionesConfigRow";
+import BackupConfigRow from "@/components/configuracion/BackupConfigRow";
 
 export default function ConfiguracionPage() {
   return (
@@ -18,6 +19,7 @@ export default function ConfiguracionPage() {
         <SuscripcionesConfigRow />
         <CategoriasConfigRow />
         <MonedaConfigRow />
+        <BackupConfigRow />
       </section>
 
       {/* Nota de privacidad: refuerza la promesa de almacenamiento 100% local */}

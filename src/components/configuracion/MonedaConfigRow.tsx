@@ -14,7 +14,7 @@ export default function MonedaConfigRow() {
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="ios-press flex w-full items-center gap-3 p-3.5"
+        className="ios-press flex w-full items-center gap-3 border-b border-surface-line p-3.5"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-line text-ink-soft">
           <Banknote size={17} />

@@ -77,3 +77,42 @@ export function eliminarRaw(key: string): void {
     console.error(`[storage] No se pudo eliminar "${key}":`, error);
   }
 }
+
+/**
+ * Vuelca TODO lo que la app guardó en localStorage (todas las claves con el
+ * prefijo `gg:`) a un objeto plano. Es la base del backup exportable: como
+ * todos los datos viven sólo en este dispositivo/navegador, esta es la
+ * única forma de protegerlos contra que el navegador los borre (ej. iOS
+ * puede liberar el storage de una app instalada si no se abre en varios
+ * días) o de llevarlos a otro dispositivo.
+ */
+export function exportarTodoElStorage(): Record<string, string> {
+  if (!esNavegador()) return {};
+  const resultado: Record<string, string> = {};
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const key = window.localStorage.key(i);
+    if (key && key.startsWith(PREFIJO)) {
+      const valor = window.localStorage.getItem(key);
+      if (valor !== null) resultado[key] = valor;
+    }
+  }
+  return resultado;
+}
+
+/**
+ * Restaura un backup generado por `exportarTodoElStorage`. Sobrescribe lo
+ * que ya hubiera guardado bajo esas mismas claves. Sólo escribe claves con
+ * el prefijo `gg:` (nunca toca otra cosa que hubiera en el localStorage del
+ * dominio, por si en algún momento conviviera con otra app).
+ */
+export function importarTodoElStorage(datos: Record<string, string>): void {
+  if (!esNavegador()) return;
+  for (const [key, valor] of Object.entries(datos)) {
+    if (!key.startsWith(PREFIJO)) continue;
+    try {
+      window.localStorage.setItem(key, valor);
+    } catch (error) {
+      console.error(`[storage] No se pudo restaurar "${key}":`, error);
+    }
+  }
+}

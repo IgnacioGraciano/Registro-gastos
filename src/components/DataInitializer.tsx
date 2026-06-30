@@ -23,6 +23,14 @@ export default function DataInitializer() {
         console.error("[sw] No se pudo registrar el service worker:", error);
       });
     }
+
+    // Pide al navegador que NO borre el storage de la app bajo presión de espacio.
+    // Es "best effort" (no todos los navegadores lo conceden), pero no tiene contras.
+    if (navigator.storage?.persist) {
+      navigator.storage.persist().then((concedido) => {
+        console.info(`[storage] Almacenamiento persistente: ${concedido ? "concedido" : "no concedido"}`);
+      });
+    }
   }, []);
 
   return null;
