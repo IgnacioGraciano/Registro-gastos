@@ -49,10 +49,15 @@ export default function BalanceResumen() {
         {/* Balance del mes: ingreso - gasto. Neutro si es 0, verde si es positivo, rojo si es negativo */}
         <div className="flex min-w-0 flex-[1.3] flex-col justify-center">
           <p className="text-[12px] text-ink-faint">Balance</p>
-          <p className={`figure-amount mt-0.5 truncate text-[30px] font-bold leading-tight ${colorBalance}`}>
-            {balance < 0 ? "-" : ""}
-            {formatMonto(Math.abs(balance), moneda)}
-          </p>
+          {(() => {
+            const texto = (balance < 0 ? "-" : "") + formatMonto(Math.abs(balance), moneda);
+            const tamano = texto.length <= 10 ? "text-[30px]" : texto.length <= 13 ? "text-[24px]" : "text-[20px]";
+            return (
+              <p className={`figure-amount mt-0.5 break-all font-bold leading-tight ${tamano} ${colorBalance}`}>
+                {texto}
+              </p>
+            );
+          })()}
         </div>
 
         {/* Divisor */}
