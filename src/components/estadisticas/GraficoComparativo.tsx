@@ -35,52 +35,79 @@ export default function GraficoComparativo({
     ? agruparPorCategoria(transacciones, categorias, desde, tipoDetalle, idCategoriaTransferencia, hasta)
     : [];
 
+  // Cuántos meses mostrar visibles al mismo tiempo antes de que el resto quede scrolleable
+  const VISIBLE = 6;
+  const necesitaScroll = periodos.length > VISIBLE;
+
   return (
     <div>
-      {/* Barras */}
-      <div className="flex items-end justify-between gap-1.5" style={{ height: ALTURA_GRAFICO }}>
-        {periodos.map((p, i) => {
-          const alturaIngreso = (p.ingreso / maxValor) * ALTURA_GRAFICO;
-          const alturaGasto = (p.gasto / maxValor) * ALTURA_GRAFICO;
-          const activo = i === seleccionado;
-          return (
-            <button
-              key={p.clave}
-              type="button"
-              onClick={() => setSeleccionado(i)}
-              className="ios-press flex h-full flex-1 flex-col items-center justify-end gap-1"
-            >
-              <div className="flex h-full items-end gap-[3px]">
-                <div
-                  className={`w-[7px] rounded-t-full transition-opacity ${
-                    activo ? "bg-accent opacity-100" : "bg-accent opacity-40"
-                  }`}
-                  style={{ height: Math.max(alturaIngreso, 2) }}
-                />
-                <div
-                  className={`w-[7px] rounded-t-full transition-opacity ${
-                    activo ? "bg-expense opacity-100" : "bg-expense opacity-40"
-                  }`}
-                  style={{ height: Math.max(alturaGasto, 2) }}
-                />
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      {/* Barras — con scroll horizontal si hay más de 6 períodos */}
+      <div
+        className="no-scrollbar overflow-x-auto"
+        style={{ scrollSnapType: necesitaScroll ? "x mandatory" : undefined } as React.CSSProperties}
+      >
+        <div
+          className="flex items-end gap-1.5"
+          style={{
+            height: ALTURA_GRAFICO,
+            minWidth: necesitaScroll ? `${periodos.length * 44}px` : undefined,
+          }}
+        >
+          {periodos.map((p, i) => {
+            const alturaIngreso = (p.ingreso / maxValor) * ALTURA_GRAFICO;
+            const alturaGasto = (p.gasto / maxValor) * ALTURA_GRAFICO;
+            const activo = i === seleccionado;
+            return (
+              <button
+                key={p.clave}
+                type="button"
+                onClick={() => setSeleccionado(i)}
+                className="ios-press flex h-full flex-col items-center justify-end gap-1"
+                style={{
+                  width: necesitaScroll ? "40px" : undefined,
+                  flex: necesitaScroll ? "0 0 40px" : "1",
+                  scrollSnapAlign: necesitaScroll ? "start" : undefined,
+                } as React.CSSProperties}
+              >
+                <div className="flex h-full items-end gap-[3px]">
+                  <div
+                    className={`w-[7px] rounded-t-full transition-opacity ${
+                      activo ? "bg-accent opacity-100" : "bg-accent opacity-40"
+                    }`}
+                    style={{ height: Math.max(alturaIngreso, 2) }}
+                  />
+                  <div
+                    className={`w-[7px] rounded-t-full transition-opacity ${
+                      activo ? "bg-expense opacity-100" : "bg-expense opacity-40"
+                    }`}
+                    style={{ height: Math.max(alturaGasto, 2) }}
+                  />
+                </div>
+              </button>
+            );
+          })}
+        </div>
 
-      {/* Etiquetas de período */}
-      <div className="mt-1 flex justify-between gap-1.5">
-        {periodos.map((p, i) => (
-          <p
-            key={p.clave}
-            className={`flex-1 text-center text-[10px] capitalize ${
-              i === seleccionado ? "font-semibold text-ink" : "text-ink-faint"
-            }`}
-          >
-            {p.etiqueta.split(" ")[0]}
-          </p>
-        ))}
+        {/* Etiquetas de período */}
+        <div
+          className="mt-1 flex gap-1.5"
+          style={{ minWidth: necesitaScroll ? `${periodos.length * 44}px` : undefined }}
+        >
+          {periodos.map((p, i) => (
+            <p
+              key={p.clave}
+              className={`text-center text-[10px] capitalize ${
+                i === seleccionado ? "font-semibold text-ink" : "text-ink-faint"
+              }`}
+              style={{
+                width: necesitaScroll ? "40px" : undefined,
+                flex: necesitaScroll ? "0 0 40px" : "1",
+              } as React.CSSProperties}
+            >
+              {p.etiqueta.split(" ")[0]}
+            </p>
+          ))}
+        </div>
       </div>
 
       {/* Detalle del período elegido: totales */}

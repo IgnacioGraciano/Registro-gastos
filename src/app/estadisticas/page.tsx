@@ -22,7 +22,17 @@ export default function EstadisticasPage() {
 
   const periodos =
     vista === "mensual"
-      ? agruparPorMes(transacciones, idTransferencia, 6)
+      ? (() => {
+          // Calcular el rango real: desde el mes más antiguo con datos hasta hoy
+          const todasLasFechas = transacciones.map((t) => t.fecha).sort();
+          const fechaMinima = todasLasFechas[0] ?? new Date().toISOString().slice(0, 10);
+          const [anioMin, mesMin] = fechaMinima.split("-").map(Number);
+          const hoy = new Date();
+          // Contar cuántos meses hay entre el primer dato y hoy
+          const totalMeses =
+            (hoy.getFullYear() - anioMin) * 12 + (hoy.getMonth() + 1 - mesMin) + 1;
+          return agruparPorMes(transacciones, idTransferencia, Math.max(totalMeses, 1));
+        })()
       : agruparPorAnio(transacciones, idTransferencia);
 
   return (

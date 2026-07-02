@@ -44,6 +44,8 @@ export interface Categoria {
    * siguen funcionando sin cambios.
    */
   color?: string;
+  /** Posición en la lista. OPCIONAL: las categorías viejas sin este campo se ordenan al final. */
+  orden?: number;
 }
 
 export interface Suscripcion {

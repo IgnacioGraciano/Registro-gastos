@@ -55,13 +55,15 @@ export function esCategoria(v: unknown): v is Categoria {
   const tieneTipoValido =
     v.tipo === undefined || v.tipo === "gasto" || v.tipo === "ingreso" || v.tipo === "ambos";
   const tieneColorValido = v.color === undefined || esColorHex(v.color);
+  const tieneOrdenValido = v.orden === undefined || esNumeroFinito(v.orden);
   return (
     esString(v.id) &&
     esString(v.nombre) &&
     esString(v.icono) &&
     esBooleano(v.esEditable) &&
     tieneTipoValido &&
-    tieneColorValido
+    tieneColorValido &&
+    tieneOrdenValido
   );
 }
 

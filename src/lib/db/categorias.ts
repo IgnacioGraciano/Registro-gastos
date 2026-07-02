@@ -14,7 +14,9 @@ export const categoriasRepo = {
     if (!nombreLimpio) {
       throw new Error("El nombre de la categoría no puede estar vacío.");
     }
-    return base.create({ nombre: nombreLimpio, icono, esEditable: true, tipo, color });
+    // Asigna el orden más alto existente + 1, para que la nueva quede al final.
+    const maxOrden = Math.max(0, ...base.getAll().map((c) => c.orden ?? 0));
+    return base.create({ nombre: nombreLimpio, icono, esEditable: true, tipo, color, orden: maxOrden + 1 });
   },
 
   /** Renombra/cambia ícono, color o tipo. Falla si la categoría está marcada como no editable. */
@@ -41,5 +43,29 @@ export const categoriasRepo = {
       throw new Error(`La categoría "${actual.nombre}" no se puede eliminar.`);
     }
     return base.remove(id);
+  },
+
+  /**
+   * Persiste un nuevo orden dado un array de IDs en el orden deseado.
+   * Asigna `orden: 0, 1, 2, ...` según la posición en el array.
+   * Las categorías que no estén en el array (ej. la de Transferencia) no se tocan.
+   */
+  reordenar(idsEnOrden: string[]): void {
+    idsEnOrden.forEach((id, index) => {
+      base.update(id, { orden: index });
+    });
+  },
+
+  /**
+   * Devuelve todas las categorías ordenadas por el campo `orden`.
+   * Las que no tienen `orden` definido van al final, manteniendo
+   * compatibilidad con datos creados antes de agregar este campo.
+   */
+  getOrdenadas(): Categoria[] {
+    return [...base.getAll()].sort((a, b) => {
+      const oa = a.orden ?? Infinity;
+      const ob = b.orden ?? Infinity;
+      return oa - ob;
+    });
   },
 };

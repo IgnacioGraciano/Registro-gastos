@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { categoriasRepo, useCollection, NOMBRE_CATEGORIA_TRANSFERENCIA, type Categoria } from "@/lib/db";
 import { categoriaAplicaA, obtenerColorCategoria } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
@@ -20,9 +20,10 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
 
   if (!abierto) return null;
 
-  const categoriasDelTipo = categorias.filter(
-    (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, tipoActivo)
-  );
+  // Ordenar por campo orden (retrocompatible: sin orden van al final)
+  const categoriasDelTipo = [...categorias]
+    .filter((c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, tipoActivo))
+    .sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity));
 
   function abrirCreacion() {
     setCategoriaEditando(null);
@@ -40,6 +41,15 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
     } catch {
       // Categoría no editable: el botón de eliminar ni se muestra para esos casos.
     }
+  }
+
+  function mover(indice: number, direccion: -1 | 1) {
+    const nuevoIndice = indice + direccion;
+    if (nuevoIndice < 0 || nuevoIndice >= categoriasDelTipo.length) return;
+    // Swap de los dos elementos en su posición
+    const ids = categoriasDelTipo.map((c) => c.id);
+    [ids[indice], ids[nuevoIndice]] = [ids[nuevoIndice], ids[indice]];
+    categoriasRepo.reordenar(ids);
   }
 
   return (
@@ -99,11 +109,39 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
               Todavía no hay categorías de {tipoActivo === "gasto" ? "gastos" : "ingresos"}.
             </p>
           )}
-          {categoriasDelTipo.map((c) => {
+          {categoriasDelTipo.map((c, i) => {
             const Icono = obtenerIconoCategoria(c.icono);
             const color = obtenerColorCategoria(c, categorias);
             return (
-              <div key={c.id} className="flex items-center gap-3 rounded-ios bg-surface p-3 shadow-card">
+              <div key={c.id} className="flex items-center gap-2 rounded-ios bg-surface p-3 shadow-card">
+                {/* Botones de reordenamiento */}
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => mover(i, -1)}
+                    disabled={i === 0}
+                    aria-label="Mover arriba"
+                    className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                      i === 0 ? "text-ink-faint opacity-30" : "ios-press bg-surface-line text-ink-soft"
+                    }`}
+                  >
+                    <ChevronUp size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => mover(i, 1)}
+                    disabled={i === categoriasDelTipo.length - 1}
+                    aria-label="Mover abajo"
+                    className={`flex h-6 w-6 items-center justify-center rounded-full ${
+                      i === categoriasDelTipo.length - 1
+                        ? "text-ink-faint opacity-30"
+                        : "ios-press bg-surface-line text-ink-soft"
+                    }`}
+                  >
+                    <ChevronDown size={13} />
+                  </button>
+                </div>
+
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
                   style={{ backgroundColor: `${color}33`, color }}
