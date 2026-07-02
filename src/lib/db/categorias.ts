@@ -51,9 +51,12 @@ export const categoriasRepo = {
    * Las categorías que no estén en el array (ej. la de Transferencia) no se tocan.
    */
   reordenar(idsEnOrden: string[]): void {
-    idsEnOrden.forEach((id, index) => {
-      base.update(id, { orden: index });
+    const todas = base.getAll();
+    const actualizadas = todas.map((c) => {
+      const nuevoOrden = idsEnOrden.indexOf(c.id);
+      return nuevoOrden === -1 ? c : { ...c, orden: nuevoOrden };
     });
+    base.replaceAll(actualizadas);
   },
 
   /**

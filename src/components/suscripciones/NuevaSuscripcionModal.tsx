@@ -10,6 +10,7 @@ import {
   NOMBRE_CATEGORIA_TRANSFERENCIA,
 } from "@/lib/db";
 import { hoyISO } from "@/lib/format";
+import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
 import { categoriaAplicaA } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
 
@@ -28,7 +29,7 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
   const billeteras = useCollection(billeterasRepo);
   // Una suscripción siempre se debita como "gasto": se excluye la categoría de sistema
   // Transferencia y las categorías creadas específicamente para ingresos.
-  const categorias = useCollection(categoriasRepo).filter(
+  const categorias = useCategoriasOrdenadas().filter(
     (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, "gasto")
   );
 

@@ -6,6 +6,7 @@ import { agruparPorCategoria, rangoDePeriodo, type ResumenPeriodo } from "@/lib/
 import { formatMonto, type Moneda } from "@/lib/format";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import { obtenerColorCategoria } from "@/lib/categoria-filtros";
+import HistorialCompletoOverlay from "@/components/dashboard/HistorialCompletoOverlay";
 
 interface Props {
   periodos: ResumenPeriodo[];
@@ -26,6 +27,7 @@ export default function GraficoComparativo({
 }: Props) {
   const [seleccionado, setSeleccionado] = useState(periodos.length - 1);
   const [tipoDetalle, setTipoDetalle] = useState<"gasto" | "ingreso">("gasto");
+  const [historialCategoria, setHistorialCategoria] = useState<{ id: string; nombre: string } | null>(null);
 
   const maxValor = Math.max(1, ...periodos.flatMap((p) => [p.ingreso, p.gasto]));
   const actual = periodos[seleccionado] ?? periodos[periodos.length - 1];
@@ -187,7 +189,12 @@ export default function GraficoComparativo({
                 const Icono = obtenerIconoCategoria(d.categoria.icono);
                 const color = obtenerColorCategoria(d.categoria, categorias);
                 return (
-                  <div key={d.categoria.id} className="flex items-center gap-2.5">
+                  <button
+                    key={d.categoria.id}
+                    type="button"
+                    onClick={() => setHistorialCategoria({ id: d.categoria.id, nombre: d.categoria.nombre })}
+                    className="ios-press flex items-center gap-2.5 rounded-ios p-1.5 text-left"
+                  >
                     <span
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
                       style={{ backgroundColor: `${color}33`, color }}
@@ -203,12 +210,23 @@ export default function GraficoComparativo({
                     <span className="figure-amount shrink-0 text-[13px] font-semibold text-ink">
                       {formatMonto(d.monto, moneda)}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           )}
         </div>
+      )}
+
+      {/* Historial filtrado por categoría del período seleccionado */}
+      {actual && (
+        <HistorialCompletoOverlay
+          abierto={historialCategoria !== null}
+          onCerrar={() => setHistorialCategoria(null)}
+          categoriaId={historialCategoria?.id}
+          tituloFiltro={historialCategoria ? `${historialCategoria.nombre} · ${actual.etiqueta}` : undefined}
+          desdeHasta={actual ? rangoDePeriodo(actual.clave) : undefined}
+        />
       )}
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { categoriasRepo, useCollection, NOMBRE_CATEGORIA_TRANSFERENCIA, type Categoria } from "@/lib/db";
+import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
 import { categoriaAplicaA, obtenerColorCategoria } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import CategoriaFormSheet from "./CategoriaFormSheet";
@@ -13,17 +14,16 @@ interface Props {
 }
 
 export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
-  const categorias = useCollection(categoriasRepo);
+  const categorias = useCategoriasOrdenadas();
   const [tipoActivo, setTipoActivo] = useState<"gasto" | "ingreso">("gasto");
   const [formAbierto, setFormAbierto] = useState(false);
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
 
   if (!abierto) return null;
 
-  // Ordenar por campo orden (retrocompatible: sin orden van al final)
-  const categoriasDelTipo = [...categorias]
-    .filter((c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, tipoActivo))
-    .sort((a, b) => (a.orden ?? Infinity) - (b.orden ?? Infinity));
+  const categoriasDelTipo = categorias.filter(
+    (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, tipoActivo)
+  );
 
   function abrirCreacion() {
     setCategoriaEditando(null);

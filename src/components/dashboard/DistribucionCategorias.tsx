@@ -12,10 +12,11 @@ import { agruparPorCategoria, inicioDeMes } from "@/lib/dashboard";
 import { formatMonto } from "@/lib/format";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import { obtenerColorCategoria } from "@/lib/categoria-filtros";
+import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
 import HistorialCompletoOverlay from "./HistorialCompletoOverlay";
 
 export default function DistribucionCategorias() {
-  const categorias = useCollection(categoriasRepo);
+  const categorias = useCategoriasOrdenadas();
   const transacciones = useCollection(transaccionesRepo);
   const moneda = useMoneda();
   const [tipo, setTipo] = useState<"gasto" | "ingreso">("gasto");
@@ -113,6 +114,7 @@ export default function DistribucionCategorias() {
         onCerrar={() => setCategoriaAbierta(null)}
         categoriaId={categoriaAbierta?.id}
         tituloFiltro={categoriaAbierta?.nombre}
+        soloMesActual
       />
     </section>
   );

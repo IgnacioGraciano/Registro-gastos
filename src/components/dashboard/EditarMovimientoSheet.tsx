@@ -11,6 +11,7 @@ import {
   type Transaccion,
 } from "@/lib/db";
 import { ayerISO, hoyISO } from "@/lib/format";
+import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
 import { categoriaAplicaA } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import BottomSheet from "@/components/BottomSheet";
@@ -24,7 +25,7 @@ type OpcionFecha = "hoy" | "ayer" | "otra";
 
 export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) {
   const billeteras = useCollection(billeterasRepo);
-  const categorias = useCollection(categoriasRepo);
+  const categorias = useCategoriasOrdenadas();
 
   const [tipo, setTipo] = useState<"gasto" | "ingreso">("gasto");
   const [montoStr, setMontoStr] = useState("");

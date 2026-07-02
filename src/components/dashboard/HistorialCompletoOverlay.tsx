@@ -9,16 +9,19 @@ import {
   useCollection,
   type Transaccion,
 } from "@/lib/db";
+import { inicioDeMes } from "@/lib/dashboard";
 import MovimientoRow from "./MovimientoRow";
 import EditarMovimientoSheet from "./EditarMovimientoSheet";
 
 interface Props {
   abierto: boolean;
   onCerrar: () => void;
-  /** Si se pasa, sólo muestra movimientos de esa categoría (ej. al hacer click en un ítem de "Gastos por categoría"). */
   categoriaId?: string;
-  /** Título a mostrar cuando hay un filtro activo (ej. el nombre de la categoría). */
   tituloFiltro?: string;
+  /** Si true, filtra sólo los movimientos del mes actual. */
+  soloMesActual?: boolean;
+  /** Rango explícito de fechas (para Estadísticas: filtra el período seleccionado). */
+  desdeHasta?: { desde: string; hasta: string };
 }
 
 export default function HistorialCompletoOverlay({
@@ -26,6 +29,8 @@ export default function HistorialCompletoOverlay({
   onCerrar,
   categoriaId,
   tituloFiltro,
+  soloMesActual,
+  desdeHasta,
 }: Props) {
   const transacciones = useCollection(transaccionesRepo);
   const billeteras = useCollection(billeterasRepo);
@@ -34,11 +39,16 @@ export default function HistorialCompletoOverlay({
 
   if (!abierto) return null;
 
-  const filtradas = categoriaId
-    ? transacciones.filter((t) => t.categoriaId === categoriaId)
-    : transacciones;
+  const desde = desdeHasta?.desde ?? (soloMesActual ? inicioDeMes() : null);
+  const hasta = desdeHasta?.hasta ?? null;
 
-  // Más recientes primero.
+  const filtradas = transacciones.filter((t) => {
+    if (categoriaId && t.categoriaId !== categoriaId) return false;
+    if (desde && t.fecha < desde) return false;
+    if (hasta && t.fecha > hasta) return false;
+    return true;
+  });
+
   const ordenados = [...filtradas].reverse().sort((a, b) => b.fecha.localeCompare(a.fecha));
 
   return (
@@ -60,7 +70,7 @@ export default function HistorialCompletoOverlay({
       <div className="no-scrollbar scroll-contenido flex-1 overflow-y-auto px-5 py-4">
         {ordenados.length === 0 ? (
           <p className="py-10 text-center text-[13px] text-ink-faint">
-            {categoriaId ? "No hay movimientos en esta categoría." : "Todavía no hay movimientos."}
+            {categoriaId ? "No hay movimientos en este período." : "Todavía no hay movimientos."}
           </p>
         ) : (
           <>
@@ -77,8 +87,7 @@ export default function HistorialCompletoOverlay({
               ))}
             </div>
             <p className="px-1 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)] pt-3 text-center text-[11.5px] text-ink-faint">
-              Tocá un movimiento para editarlo. Deslizá hacia la izquierda para eliminarlo (revierte
-              el efecto en el saldo).
+              Tocá un movimiento para editarlo. Deslizá hacia la izquierda para eliminarlo.
             </p>
           </>
         )}

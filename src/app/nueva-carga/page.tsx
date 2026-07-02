@@ -11,6 +11,7 @@ import {
 } from "@/lib/db";
 import { ayerISO, hoyISO } from "@/lib/format";
 import { obtenerIconoCategoria } from "@/lib/icons";
+import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
 import { categoriaAplicaA } from "@/lib/categoria-filtros";
 
 type Tecla =
@@ -54,7 +55,7 @@ const ESTADO_INICIAL = {
 
 export default function NuevaCargaPage() {
   const billeteras = useCollection(billeterasRepo);
-  const categorias = useCollection(categoriasRepo);
+  const categorias = useCategoriasOrdenadas();
 
   const [raw, setRaw] = useState(ESTADO_INICIAL.raw);
   const [tipo, setTipo] = useState<"gasto" | "ingreso">(ESTADO_INICIAL.tipo);

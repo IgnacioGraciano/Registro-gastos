@@ -50,11 +50,14 @@ export default function BalanceResumen() {
         <div className="flex min-w-0 flex-[1.3] flex-col justify-center">
           <p className="text-[12px] text-ink-faint">Balance</p>
           {(() => {
-            const texto = (balance < 0 ? "-" : "") + formatMonto(Math.abs(balance), moneda);
-            const tamano = texto.length <= 10 ? "text-[30px]" : texto.length <= 13 ? "text-[24px]" : "text-[20px]";
+            // Separo el signo + símbolo del número puro para que sean más chicos
+            const abs = Math.abs(balance);
+            const numStr = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(abs);
+            const tamano = numStr.length <= 7 ? "text-[30px]" : numStr.length <= 10 ? "text-[24px]" : "text-[20px]";
             return (
-              <p className={`figure-amount mt-0.5 break-all font-bold leading-tight ${tamano} ${colorBalance}`}>
-                {texto}
+              <p className={`figure-amount mt-0.5 font-bold leading-tight ${tamano} ${colorBalance}`}>
+                <span className="text-[0.6em]">{balance < 0 ? "-$" : "$"}</span>
+                {numStr}
               </p>
             );
           })()}
