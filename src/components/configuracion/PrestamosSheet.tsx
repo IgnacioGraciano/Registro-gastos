@@ -94,7 +94,7 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
   return (
     <BottomSheet abierto={abierto} onCerrar={onCerrar} titulo="Mis Préstamos">
       {modo === "lista" && (
-        <div className="flex flex-col gap-4 pb-20">
+        <div className="flex flex-col gap-4 pr-5">
           {prestamos.length > 0 && (
             <div className="rounded-ios bg-accent-soft p-3 text-center">
               <p className="text-[12px] text-ink-faint">Dinero que te deben:</p>
@@ -189,13 +189,15 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             <p className="py-4 text-center text-[13px] text-ink-faint">Sin préstamos registrados.</p>
           )}
 
+          <div className="h-16" />
+
           <button
             type="button"
             onClick={() => {
               setModo("crear");
               setError(null);
             }}
-            className="ios-press fixed bottom-[calc(var(--safe-bottom)+16px)] left-5 right-5 flex items-center justify-center gap-2 rounded-ios bg-accent py-3 text-[14px] font-bold text-white"
+            className="ios-press fixed bottom-[calc(var(--safe-bottom)+20px)] left-5 right-5 flex items-center justify-center gap-2 rounded-ios bg-accent py-3 text-[14px] font-bold text-white"
           >
             <Plus size={16} />
             Nuevo Préstamo
@@ -204,7 +206,7 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
       )}
 
       {modo === "crear" && (
-        <div className="flex flex-col gap-4 pb-20">
+        <div className="flex flex-col gap-4 pr-5">
           <div>
             <label className="mb-1 block text-[13px] font-semibold text-ink">Nombre de la persona</label>
             <input
@@ -257,7 +259,9 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
 
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
 
-          <div className="fixed bottom-[calc(var(--safe-bottom)+16px)] left-5 right-5 flex gap-2">
+          <div className="h-32" />
+
+          <div className="fixed bottom-[calc(var(--safe-bottom)+20px)] left-5 right-5 flex gap-2">
             <button
               type="button"
               onClick={() => {
@@ -280,7 +284,7 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
       )}
 
       {modo === "pago" && prestamoSeleccionado && (
-        <div className="flex flex-col gap-4 pb-20">
+        <div className="flex flex-col gap-4 pr-5">
           <div className="rounded-ios bg-surface p-3">
             <p className="text-[12px] text-ink-faint">Préstamo a</p>
             <p className="text-[14px] font-semibold text-ink">{prestamoSeleccionado.persona}</p>
@@ -322,7 +326,9 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
 
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
 
-          <div className="fixed bottom-[calc(var(--safe-bottom)+16px)] left-5 right-5 flex gap-2">
+          <div className="h-32" />
+
+          <div className="fixed bottom-[calc(var(--safe-bottom)+20px)] left-5 right-5 flex gap-2">
             <button
               type="button"
               onClick={() => {
