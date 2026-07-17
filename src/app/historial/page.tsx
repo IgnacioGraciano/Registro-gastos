@@ -17,10 +17,10 @@ export default function ConfiguracionPage() {
 
       <section className="overflow-hidden rounded-ios bg-surface shadow-card">
         <CuentasConfigRow />
+        <PrestamosConfigRow />
         <SuscripcionesConfigRow />
         <CategoriasConfigRow />
         <MonedaConfigRow />
-        <PrestamosConfigRow />
         <BackupConfigRow />
       </section>
 
