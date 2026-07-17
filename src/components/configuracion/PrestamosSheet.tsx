@@ -21,14 +21,12 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
   const [modo, setModo] = useState<"lista" | "crear" | "pago">("lista");
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(null);
 
-  // Crear préstamo
   const [persona, setPersona] = useState("");
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(hoyISO());
   const [descripcion, setDescripcion] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Registrar pago
   const [montoPago, setMontoPago] = useState("");
   const [fechaPago, setFechaPago] = useState(hoyISO());
 
@@ -97,7 +95,6 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
     <BottomSheet abierto={abierto} onCerrar={onCerrar} titulo="Mis Préstamos">
       {modo === "lista" && (
         <div className="flex flex-col gap-4">
-          {/* Resumen */}
           {prestamos.length > 0 && (
             <div className="rounded-ios bg-accent-soft p-3 text-center">
               <p className="text-[12px] text-ink-faint">Dinero que te deben:</p>
@@ -107,7 +104,6 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             </div>
           )}
 
-          {/* Pendientes */}
           {prestamosPendientes.length > 0 && (
             <div>
               <p className="mb-2 text-[12px] font-semibold text-ink-faint uppercase tracking-wide">
@@ -133,7 +129,6 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
                       </div>
                     </div>
 
-                    {/* Barra de progreso si es parcial */}
                     {p.estado === "parcial" && (
                       <div className="mb-2 h-1.5 w-full rounded-full bg-surface-line overflow-hidden">
                         <div
@@ -167,7 +162,6 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             </div>
           )}
 
-          {/* Pagados */}
           {prestamosPageos.length > 0 && (
             <div>
               <p className="mb-2 text-[12px] font-semibold text-ink-faint uppercase tracking-wide">
@@ -191,12 +185,10 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             </div>
           )}
 
-          {/* Vacío */}
           {prestamos.length === 0 && (
             <p className="py-4 text-center text-[13px] text-ink-faint">Sin préstamos registrados.</p>
           )}
 
-          {/* Botón crear */}
           <button
             type="button"
             onClick={() => {

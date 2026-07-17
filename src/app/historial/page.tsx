@@ -4,6 +4,7 @@ import MonedaConfigRow from "@/components/configuracion/MonedaConfigRow";
 import CuentasConfigRow from "@/components/configuracion/CuentasConfigRow";
 import SuscripcionesConfigRow from "@/components/configuracion/SuscripcionesConfigRow";
 import BackupConfigRow from "@/components/configuracion/BackupConfigRow";
+import PrestamosConfigRow from "@/components/configuracion/PrestamosConfigRow";
 
 export default function ConfiguracionPage() {
   return (
@@ -19,6 +20,7 @@ export default function ConfiguracionPage() {
         <SuscripcionesConfigRow />
         <CategoriasConfigRow />
         <MonedaConfigRow />
+        <PrestamosConfigRow />
         <BackupConfigRow />
       </section>
 

@@ -10,19 +10,19 @@ export type Prestamo = {
   persona: string;
   monto: number;
   moneda: Moneda;
-  fecha: string; // "YYYY-MM-DD"
+  fecha: string;
   billeteraId: string;
   estado: "pendiente" | "parcial" | "pagado";
   montoPagado?: number;
   descripcion?: string;
-  createdAt: number; // timestamp
+  createdAt: number;
 };
 
 type Pago = {
   id: string;
   prestamoId: string;
   monto: number;
-  fecha: string; // "YYYY-MM-DD"
+  fecha: string;
   createdAt: number;
 };
 
