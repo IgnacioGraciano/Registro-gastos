@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tabbar-height: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  /* Bloqueo absoluto de scroll horizontal en toda la app */
+  overflow-x: hidden;
+  width: 100%;
+  background-color: #0a0a07;
+  /* Respaldo: evita el pull-to-refresh nativo del navegador a nivel de documento */
+  overscroll-behavior-y: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  color: #f1f2ec;
+}
+
+/* Tipografía numérica tabular para montos: look "fintech" consistente */
+.figure-amount {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+    monospace;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+
+/* Oculta la scrollbar dentro del marco del teléfono sin perder el scroll funcional */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Evita que, al llegar al límite de un contenedor scrolleable (ej. una hoja
+ * inferior con mucho contenido), el gesto se "escape" hacia el contenedor
+ * de afuera (el <main> de toda la app) o dispare el pull-to-refresh del
+ * navegador. Sin esto, en el celular el scroll de una hoja inferior podía
+ * terminar moviendo toda la página como si la estuviera recargando.
+ */
+.scroll-contenido {
+  overscroll-behavior: contain;
+}
+
+/* Transición estándar estilo iOS para press states */
+.ios-press {
+  transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1),
+    opacity 0.15s ease-out;
+}
+.ios-press:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+/* Efecto vidrio (glass) para la tab bar, estilo iOS translúcido, versión oscura */
+.glass-tabbar {
+  background-color: rgba(18, 19, 9, 0.86);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
