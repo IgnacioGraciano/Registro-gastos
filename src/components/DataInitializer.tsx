@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { inicializarDatosBase, procesarDebitosPendientes } from "@/lib/db";
+import { inicializarDatosBase, procesarDebitosPendientes, migrarPrestamosZustand } from "@/lib/db";
 
 /**
  * No renderiza nada visible. Al montar la app (una vez por sesión):
@@ -12,6 +12,7 @@ import { inicializarDatosBase, procesarDebitosPendientes } from "@/lib/db";
 export default function DataInitializer() {
   useEffect(() => {
     inicializarDatosBase();
+    migrarPrestamosZustand();
 
     const resultados = procesarDebitosPendientes();
     if (resultados.length > 0) {

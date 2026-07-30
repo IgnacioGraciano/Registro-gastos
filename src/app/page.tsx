@@ -1,6 +1,7 @@
 import BalanceResumen from "@/components/dashboard/BalanceResumen";
 import DistribucionCategorias from "@/components/dashboard/DistribucionCategorias";
 import HistorialButton from "@/components/dashboard/HistorialButton";
+import PrestamosPendientes from "@/components/dashboard/PrestamosPendientes";
 
 export default function DashboardPage() {
   return (
@@ -13,6 +14,7 @@ export default function DashboardPage() {
       </header>
 
       <BalanceResumen />
+      <PrestamosPendientes />
       <DistribucionCategorias />
     </div>
   );

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, Calendar } from "lucide-react";
-import usePrestamosStore, { Prestamo } from "@/lib/prestamos";
-import { useMoneda } from "@/lib/db";
-import { formatMonto } from "@/lib/format";
+import { useEffect, useState } from "react";
+import { Plus, Trash2, Calendar, Wallet } from "lucide-react";
+import {
+  billeterasRepo,
+  prestamosRepo,
+  useCollection,
+  useMoneda,
+  type Prestamo,
+} from "@/lib/db";
+import { formatMonto, hoyISO } from "@/lib/format";
 import BottomSheet from "@/components/BottomSheet";
-import { hoyISO } from "@/lib/format";
 
 interface Props {
   abierto: boolean;
@@ -15,8 +19,8 @@ interface Props {
 
 export default function PrestamosSheet({ abierto, onCerrar }: Props) {
   const moneda = useMoneda();
-  const store = usePrestamosStore();
-  const prestamos = store.prestamos;
+  const prestamos = useCollection(prestamosRepo);
+  const billeteras = useCollection(billeterasRepo);
 
   const [modo, setModo] = useState<"lista" | "crear" | "pago">("lista");
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState<Prestamo | null>(null);
@@ -25,18 +29,40 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(hoyISO());
   const [descripcion, setDescripcion] = useState("");
+  const [billeteraId, setBilleteraId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [montoPago, setMontoPago] = useState("");
   const [fechaPago, setFechaPago] = useState(hoyISO());
 
-  const totalPendiente = store.calcularTotalPendiente();
-  const prestamosPendientes = prestamos.filter((p) => p.estado !== "pagado");
-  const prestamosPageos = prestamos.filter((p) => p.estado === "pagado");
+  useEffect(() => {
+    if (!abierto) {
+      setModo("lista");
+      setPrestamoSeleccionado(null);
+      setPersona("");
+      setMonto("");
+      setFecha(hoyISO());
+      setDescripcion("");
+      setBilleteraId(null);
+      setMontoPago("");
+      setFechaPago(hoyISO());
+      setError(null);
+    }
+  }, [abierto]);
+
+  const pendientes = prestamos
+    .filter((p) => prestamosRepo.montoPendiente(p) > 0)
+    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+
+  const totalPendiente = prestamosRepo.totalPendiente();
 
   function crearPrestamo() {
     if (!persona.trim()) {
       setError("Ingresá el nombre de la persona.");
+      return;
+    }
+    if (!billeteraId) {
+      setError("Elegí una cuenta.");
       return;
     }
     const montoNum = parseFloat(monto.replace(",", "."));
@@ -45,21 +71,19 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
       return;
     }
 
-    store.crearPrestamo({
-      persona: persona.trim(),
-      monto: montoNum,
-      moneda,
-      fecha,
-      billeteraId: "",
-      descripcion: descripcion.trim(),
-    });
-
-    setPersona("");
-    setMonto("");
-    setFecha(hoyISO());
-    setDescripcion("");
-    setError(null);
-    setModo("lista");
+    try {
+      prestamosRepo.crear({
+        persona: persona.trim(),
+        monto: montoNum,
+        billeteraId,
+        fecha,
+        descripcion: descripcion.trim(),
+      });
+      setModo("lista");
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo crear el préstamo.");
+    }
   }
 
   function registrarPago() {
@@ -70,32 +94,105 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
       return;
     }
 
-    const montoPendiente = store.calcularMontoPendiente(prestamoSeleccionado);
-    if (montoNum > montoPendiente) {
-      setError(`No podés registrar más de ${formatMonto(montoPendiente, moneda)}.`);
-      return;
+    try {
+      prestamosRepo.registrarPago(prestamoSeleccionado.id, montoNum, fechaPago);
+      setModo("lista");
+      setPrestamoSeleccionado(null);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo registrar el pago.");
     }
+  }
 
-    store.registrarPago(prestamoSeleccionado.id, montoNum, fechaPago);
-
-    setMontoPago("");
-    setFechaPago(hoyISO());
-    setError(null);
-    setModo("lista");
-    setPrestamoSeleccionado(null);
+  function marcarPerdida() {
+    if (!prestamoSeleccionado) return;
+    try {
+      prestamosRepo.marcarComoPerdida(prestamoSeleccionado.id, fechaPago);
+      setModo("lista");
+      setPrestamoSeleccionado(null);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo registrar la pérdida.");
+    }
   }
 
   function abrirModalPago(prestamo: Prestamo) {
     setPrestamoSeleccionado(prestamo);
     setModo("pago");
+    setMontoPago("");
+    setFechaPago(hoyISO());
     setError(null);
   }
 
+  const footerLista = (
+    <button
+      type="button"
+      onClick={() => {
+        setModo("crear");
+        setError(null);
+      }}
+      className="ios-press flex w-full items-center justify-center gap-2 rounded-ios bg-accent py-3 text-[14px] font-bold text-white"
+    >
+      <Plus size={16} />
+      Nuevo Préstamo
+    </button>
+  );
+
+  const footerCrear = (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={() => {
+          setModo("lista");
+          setError(null);
+        }}
+        className="ios-press flex-1 rounded-ios border border-surface-line py-3 text-[14px] font-semibold text-ink"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        onClick={crearPrestamo}
+        className="ios-press flex-1 rounded-ios bg-brand py-3 text-[14px] font-bold text-white"
+      >
+        Guardar
+      </button>
+    </div>
+  );
+
+  const footerPago = (
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={() => {
+          setModo("lista");
+          setPrestamoSeleccionado(null);
+          setError(null);
+        }}
+        className="ios-press flex-1 rounded-ios border border-surface-line py-3 text-[14px] font-semibold text-ink"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        onClick={registrarPago}
+        className="ios-press flex-1 rounded-ios bg-accent py-3 text-[14px] font-bold text-white"
+      >
+        Registrar pago
+      </button>
+    </div>
+  );
+
   return (
-    <BottomSheet abierto={abierto} onCerrar={onCerrar} titulo="Mis Préstamos">
+    <BottomSheet
+      abierto={abierto}
+      onCerrar={onCerrar}
+      titulo="Mis Préstamos"
+      footer={modo === "lista" ? footerLista : modo === "crear" ? footerCrear : footerPago}
+    >
       {modo === "lista" && (
-        <div className="flex flex-col gap-4 pr-5">
-          {prestamos.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {pendientes.length > 0 && (
             <div className="rounded-ios bg-accent-soft p-3 text-center">
               <p className="text-[12px] text-ink-faint">Dinero que te deben:</p>
               <p className="figure-amount text-[24px] font-bold text-accent">
@@ -104,38 +201,34 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             </div>
           )}
 
-          {prestamosPendientes.length > 0 && (
-            <div>
-              <p className="mb-2 text-[12px] font-semibold text-ink-faint uppercase tracking-wide">
-                Pendientes ({prestamosPendientes.length})
-              </p>
-              <div className="flex flex-col gap-2">
-                {prestamosPendientes.map((p) => (
+          {pendientes.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {pendientes.map((p) => {
+                const pendiente = prestamosRepo.montoPendiente(p);
+                return (
                   <div key={p.id} className="rounded-ios bg-surface p-3 shadow-card">
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="mb-2 flex items-start justify-between gap-2">
                       <div>
                         <p className="text-[14px] font-semibold text-ink">{p.persona}</p>
                         <p className="text-[12px] text-ink-faint">{p.fecha}</p>
                       </div>
                       <div className="text-right">
                         <p className="figure-amount text-[14px] font-bold text-ink">
-                          {formatMonto(p.monto, moneda)}
+                          {formatMonto(pendiente, moneda)}
                         </p>
                         <p className="text-[11px] text-ink-faint">
-                          {p.estado === "parcial"
-                            ? `Pagado: ${formatMonto(p.montoPagado || 0, moneda)}`
+                          {p.montoPagado > 0
+                            ? `de ${formatMonto(p.monto, moneda)}`
                             : "Sin pagos"}
                         </p>
                       </div>
                     </div>
 
-                    {p.estado === "parcial" && (
-                      <div className="mb-2 h-1.5 w-full rounded-full bg-surface-line overflow-hidden">
+                    {p.montoPagado > 0 && (
+                      <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-line">
                         <div
                           className="h-full bg-accent"
-                          style={{
-                            width: `${((p.montoPagado || 0) / p.monto) * 100}%`,
-                          }}
+                          style={{ width: `${(p.montoPagado / p.monto) * 100}%` }}
                         />
                       </div>
                     )}
@@ -150,63 +243,24 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => store.eliminarPrestamo(p.id)}
+                        onClick={() => prestamosRepo.eliminar(p.id)}
                         className="ios-press flex h-9 w-9 items-center justify-center rounded-ios bg-expense-soft text-expense"
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
-
-          {prestamosPageos.length > 0 && (
-            <div>
-              <p className="mb-2 text-[12px] font-semibold text-ink-faint uppercase tracking-wide">
-                Pagados ({prestamosPageos.length})
-              </p>
-              <div className="flex flex-col gap-2">
-                {prestamosPageos.map((p) => (
-                  <div key={p.id} className="rounded-ios bg-surface p-3 shadow-card opacity-60">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-[14px] font-semibold text-ink">{p.persona}</p>
-                        <p className="text-[12px] text-ink-faint">✓ Pagado</p>
-                      </div>
-                      <p className="figure-amount text-[14px] font-bold text-ink">
-                        {formatMonto(p.monto, moneda)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {prestamos.length === 0 && (
+          ) : (
             <p className="py-4 text-center text-[13px] text-ink-faint">Sin préstamos registrados.</p>
           )}
-
-          <div className="h-16" />
-
-          <button
-            type="button"
-            onClick={() => {
-              setModo("crear");
-              setError(null);
-            }}
-            className="ios-press fixed bottom-[calc(var(--safe-bottom)+20px)] left-5 right-5 flex items-center justify-center gap-2 rounded-ios bg-accent py-3 text-[14px] font-bold text-white"
-          >
-            <Plus size={16} />
-            Nuevo Préstamo
-          </button>
         </div>
       )}
 
       {modo === "crear" && (
-        <div className="flex flex-col gap-4 pr-5">
+        <div className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block text-[13px] font-semibold text-ink">Nombre de la persona</label>
             <input
@@ -224,11 +278,31 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             <label className="mb-1 block text-[13px] font-semibold text-ink">Monto</label>
             <input
               type="text"
+              inputMode="decimal"
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
               placeholder="0"
               className="figure-amount w-full rounded-ios bg-surface p-3 text-[14px] text-ink outline-none placeholder:text-ink-faint"
             />
+          </div>
+
+          <div>
+            <p className="mb-2 text-[13px] font-semibold text-ink">Cuenta</p>
+            <div className="flex flex-wrap gap-2">
+              {billeteras.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => setBilleteraId(b.id)}
+                  className={`ios-press flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-medium shadow-card ${
+                    billeteraId === b.id ? "bg-brand text-white" : "bg-surface text-ink"
+                  }`}
+                >
+                  <Wallet size={14} />
+                  {b.nombre}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -258,33 +332,11 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
           </div>
 
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
-
-          <div className="h-32" />
-
-          <div className="fixed bottom-[calc(var(--safe-bottom)+20px)] left-5 right-5 flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setModo("lista");
-                setError(null);
-              }}
-              className="ios-press flex-1 rounded-ios border border-surface-line py-3 text-[14px] font-semibold text-ink"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={crearPrestamo}
-              className="ios-press flex-1 rounded-ios bg-brand py-3 text-[14px] font-bold text-white"
-            >
-              Guardar
-            </button>
-          </div>
         </div>
       )}
 
       {modo === "pago" && prestamoSeleccionado && (
-        <div className="flex flex-col gap-4 pr-5">
+        <div className="flex flex-col gap-4">
           <div className="rounded-ios bg-surface p-3">
             <p className="text-[12px] text-ink-faint">Préstamo a</p>
             <p className="text-[14px] font-semibold text-ink">{prestamoSeleccionado.persona}</p>
@@ -294,7 +346,7 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             </p>
             <p className="mt-2 text-[12px] text-ink-faint">Falta cobrar</p>
             <p className="figure-amount text-[16px] font-bold text-accent">
-              {formatMonto(store.calcularMontoPendiente(prestamoSeleccionado), moneda)}
+              {formatMonto(prestamosRepo.montoPendiente(prestamoSeleccionado), moneda)}
             </p>
           </div>
 
@@ -302,12 +354,17 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             <label className="mb-1 block text-[13px] font-semibold text-ink">Monto del pago</label>
             <input
               type="text"
+              inputMode="decimal"
               value={montoPago}
               onChange={(e) => setMontoPago(e.target.value)}
               placeholder="0"
               autoFocus
               className="figure-amount w-full rounded-ios bg-surface p-3 text-[14px] text-ink outline-none placeholder:text-ink-faint"
             />
+            <p className="mt-1.5 text-[11.5px] text-ink-faint">
+              Recuperar lo prestado no cuenta como ingreso. Si te pagan de más, esa diferencia sí
+              se registra como ganancia.
+            </p>
           </div>
 
           <div>
@@ -324,30 +381,16 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
             </div>
           </div>
 
+          <button
+            type="button"
+            onClick={marcarPerdida}
+            className="ios-press w-full rounded-ios border border-expense/30 py-2.5 text-[12.5px] font-semibold text-expense"
+          >
+            No van a pagar el resto: dar por pérdida{" "}
+            {formatMonto(prestamosRepo.montoPendiente(prestamoSeleccionado), moneda)}
+          </button>
+
           {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
-
-          <div className="h-32" />
-
-          <div className="fixed bottom-[calc(var(--safe-bottom)+20px)] left-5 right-5 flex gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setModo("lista");
-                setPrestamoSeleccionado(null);
-                setError(null);
-              }}
-              className="ios-press flex-1 rounded-ios border border-surface-line py-3 text-[14px] font-semibold text-ink"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={registrarPago}
-              className="ios-press flex-1 rounded-ios bg-accent py-3 text-[14px] font-bold text-white"
-            >
-              Registrar pago
-            </button>
-          </div>
         </div>
       )}
     </BottomSheet>

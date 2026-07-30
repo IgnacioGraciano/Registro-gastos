@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Categoria, Transaccion } from "@/lib/db";
-import { agruparPorCategoria, rangoDePeriodo, type ResumenPeriodo } from "@/lib/dashboard";
+import { agruparPorCategoria, rangoDePeriodo, type CategoriasExcluidas, type ResumenPeriodo } from "@/lib/dashboard";
 import { formatMonto, type Moneda } from "@/lib/format";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import { obtenerColorCategoria } from "@/lib/categoria-filtros";
@@ -13,7 +13,7 @@ interface Props {
   moneda: Moneda;
   transacciones: Transaccion[];
   categorias: Categoria[];
-  idCategoriaTransferencia: string | undefined;
+  idsExcluidos: CategoriasExcluidas;
 }
 
 const ALTURA_GRAFICO = 120; // px
@@ -23,7 +23,7 @@ export default function GraficoComparativo({
   moneda,
   transacciones,
   categorias,
-  idCategoriaTransferencia,
+  idsExcluidos,
 }: Props) {
   const [seleccionado, setSeleccionado] = useState(periodos.length - 1);
   const [tipoDetalle, setTipoDetalle] = useState<"gasto" | "ingreso">("gasto");
@@ -34,7 +34,7 @@ export default function GraficoComparativo({
 
   const { desde, hasta } = actual ? rangoDePeriodo(actual.clave) : { desde: "", hasta: "" };
   const distribucion = actual
-    ? agruparPorCategoria(transacciones, categorias, desde, tipoDetalle, idCategoriaTransferencia, hasta)
+    ? agruparPorCategoria(transacciones, categorias, desde, tipoDetalle, idsExcluidos, hasta)
     : [];
 
   // Cuántos meses mostrar visibles al mismo tiempo antes de que el resto quede scrolleable

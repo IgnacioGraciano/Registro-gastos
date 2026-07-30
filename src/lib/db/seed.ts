@@ -4,6 +4,20 @@ import { categoriasRepo } from "./categorias";
 /** Nombre de la categoría de sistema usada para las dos patas de una transferencia entre billeteras. */
 export const NOMBRE_CATEGORIA_TRANSFERENCIA = "Transferencia";
 
+/** Categoría de sistema para préstamos (gasto al prestar, ingreso al cobrar). */
+export const NOMBRE_CATEGORIA_PRESTAMO = "Préstamo";
+
+/**
+ * Categoría de sistema para la ganancia (o pérdida) de un préstamo: la
+ * diferencia entre lo prestado y lo cobrado. Es la única pata de un préstamo
+ * que cuenta como ingreso/gasto "real" en los totales (ver `esGastoReal` /
+ * `esIngresoReal` en lib/dashboard.ts).
+ */
+export const NOMBRE_CATEGORIA_GANANCIA_PRESTAMO = "Ganancia de préstamo";
+
+/** Categoría de sistema para la parte de un préstamo dada por incobrable: sí cuenta como gasto real. */
+export const NOMBRE_CATEGORIA_PERDIDA_PRESTAMO = "Pérdida de préstamo";
+
 /**
  * Billeteras precargadas. Se incluye una tercera ("Banco") además de las dos
  * pedidas (Efectivo, Mercado Pago) para cubrir el mínimo de 3 — es fácil
@@ -47,6 +61,46 @@ function asegurarCategoriaTransferencia(): void {
   }
 }
 
+function asegurarCategoriaPrestamo(): void {
+  const existe = categoriasRepo.getAll().some((c) => c.nombre === NOMBRE_CATEGORIA_PRESTAMO);
+  if (!existe) {
+    categoriasRepo.create({
+      nombre: NOMBRE_CATEGORIA_PRESTAMO,
+      icono: "Banknote",
+      esEditable: false,
+      tipo: "ambos",
+    });
+  }
+}
+
+function asegurarCategoriaGananciaPrestamo(): void {
+  const existe = categoriasRepo
+    .getAll()
+    .some((c) => c.nombre === NOMBRE_CATEGORIA_GANANCIA_PRESTAMO);
+  if (!existe) {
+    categoriasRepo.create({
+      nombre: NOMBRE_CATEGORIA_GANANCIA_PRESTAMO,
+      icono: "TrendingUp",
+      esEditable: false,
+      tipo: "ambos",
+    });
+  }
+}
+
+function asegurarCategoriaPerdidaPrestamo(): void {
+  const existe = categoriasRepo
+    .getAll()
+    .some((c) => c.nombre === NOMBRE_CATEGORIA_PERDIDA_PRESTAMO);
+  if (!existe) {
+    categoriasRepo.create({
+      nombre: NOMBRE_CATEGORIA_PERDIDA_PRESTAMO,
+      icono: "TrendingDown",
+      esEditable: false,
+      tipo: "ambos",
+    });
+  }
+}
+
 /**
  * Si la app se abre por primera vez (billeteras y categorías vacías),
  * precarga los datos base. Es idempotente y segura de llamar varias veces:
@@ -68,6 +122,9 @@ export function inicializarDatosBase(): void {
     }
 
     asegurarCategoriaTransferencia();
+    asegurarCategoriaPrestamo();
+    asegurarCategoriaGananciaPrestamo();
+    asegurarCategoriaPerdidaPrestamo();
   } catch (error) {
     console.error("[seed] No se pudieron precargar los datos base:", error);
   } finally {

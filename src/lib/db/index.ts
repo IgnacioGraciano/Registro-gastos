@@ -7,6 +7,7 @@ export type {
   FrecuenciaSuscripcion,
   Identificable,
   Presupuesto,
+  Prestamo,
   Suscripcion,
   TipoCategoria,
   TipoTransaccion,
@@ -18,12 +19,19 @@ export { categoriasRepo } from "./categorias";
 export { transaccionesRepo } from "./transacciones";
 export { suscripcionesRepo } from "./suscripciones";
 export { presupuestosRepo } from "./presupuestos";
+export { prestamosRepo, migrarPrestamosZustand } from "./prestamos";
 export { registrarTransferencia } from "./transferencias";
 export { exportarTodoElStorage, importarTodoElStorage } from "./storage";
 export { procesarDebitosPendientes } from "./debitos";
 export type { ResultadoDebito } from "./debitos";
 
-export { inicializarDatosBase, NOMBRE_CATEGORIA_TRANSFERENCIA } from "./seed";
+export {
+  inicializarDatosBase,
+  NOMBRE_CATEGORIA_TRANSFERENCIA,
+  NOMBRE_CATEGORIA_PRESTAMO,
+  NOMBRE_CATEGORIA_GANANCIA_PRESTAMO,
+  NOMBRE_CATEGORIA_PERDIDA_PRESTAMO,
+} from "./seed";
 export { useCollection } from "./useCollection";
 export { useMoneda } from "./usePreferencias";
 export { actualizarMoneda } from "./preferencias";

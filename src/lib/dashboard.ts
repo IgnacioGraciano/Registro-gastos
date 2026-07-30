@@ -17,24 +17,35 @@ export function haceNDias(dias: number, referencia: Date = new Date()): string {
   return `${anio}-${mes}-${dia}`;
 }
 
-/** Una transacción cuenta como "gasto real" si es de tipo gasto Y no es una de las dos patas de una transferencia interna. */
-export function esGastoReal(t: Transaccion, idCategoriaTransferencia?: string): boolean {
-  return t.tipo === "gasto" && t.categoriaId !== idCategoriaTransferencia;
+/**
+ * Categorías cuyas transacciones son movimientos de dinero "propios" (no
+ * ingreso/gasto real): las dos patas de una transferencia entre billeteras
+ * propias, y las dos patas de capital de un préstamo (el gasto al prestar y
+ * el cobro del capital al recuperarlo). Acepta ids `undefined` sin problema
+ * para no romper mientras esas categorías todavía no existen.
+ */
+export type CategoriasExcluidas = Array<string | undefined>;
+
+/** Una transacción cuenta como "gasto real" si es de tipo gasto Y no pertenece a una categoría excluida (transferencia interna o capital de un préstamo). */
+export function esGastoReal(t: Transaccion, idsExcluidos?: string | CategoriasExcluidas): boolean {
+  const excluidos = Array.isArray(idsExcluidos) ? idsExcluidos : [idsExcluidos];
+  return t.tipo === "gasto" && !excluidos.includes(t.categoriaId);
 }
 
-/** Igual que esGastoReal, pero para ingresos: una transferencia entre tus propias billeteras no es "ingreso real". */
-export function esIngresoReal(t: Transaccion, idCategoriaTransferencia?: string): boolean {
-  return t.tipo === "ingreso" && t.categoriaId !== idCategoriaTransferencia;
+/** Igual que esGastoReal, pero para ingresos: una transferencia entre tus propias billeteras, o el cobro del capital de un préstamo, no es "ingreso real". */
+export function esIngresoReal(t: Transaccion, idsExcluidos?: string | CategoriasExcluidas): boolean {
+  const excluidos = Array.isArray(idsExcluidos) ? idsExcluidos : [idsExcluidos];
+  return t.tipo === "ingreso" && !excluidos.includes(t.categoriaId);
 }
 
 /** Suma los gastos reales desde `desde` (inclusive) hasta hoy. */
 export function sumarGastosDesde(
   transacciones: Transaccion[],
   desde: string,
-  idCategoriaTransferencia?: string
+  idsExcluidos?: string | CategoriasExcluidas
 ): number {
   return transacciones
-    .filter((t) => esGastoReal(t, idCategoriaTransferencia) && t.fecha >= desde)
+    .filter((t) => esGastoReal(t, idsExcluidos) && t.fecha >= desde)
     .reduce((acc, t) => acc + t.monto, 0);
 }
 
@@ -42,10 +53,10 @@ export function sumarGastosDesde(
 export function sumarIngresosDesde(
   transacciones: Transaccion[],
   desde: string,
-  idCategoriaTransferencia?: string
+  idsExcluidos?: string | CategoriasExcluidas
 ): number {
   return transacciones
-    .filter((t) => esIngresoReal(t, idCategoriaTransferencia) && t.fecha >= desde)
+    .filter((t) => esIngresoReal(t, idsExcluidos) && t.fecha >= desde)
     .reduce((acc, t) => acc + t.monto, 0);
 }
 
@@ -61,14 +72,14 @@ export function agruparPorCategoria(
   categorias: Categoria[],
   desde: string,
   tipo: "gasto" | "ingreso",
-  idCategoriaTransferencia?: string,
+  idsExcluidos?: string | CategoriasExcluidas,
   hasta?: string
 ): CategoriaConMonto[] {
   const esReal = tipo === "gasto" ? esGastoReal : esIngresoReal;
   const totalPorCategoria = new Map<string, number>();
 
   for (const t of transacciones) {
-    if (!esReal(t, idCategoriaTransferencia) || t.fecha < desde) continue;
+    if (!esReal(t, idsExcluidos) || t.fecha < desde) continue;
     if (hasta && t.fecha > hasta) continue;
     totalPorCategoria.set(t.categoriaId, (totalPorCategoria.get(t.categoriaId) ?? 0) + t.monto);
   }
@@ -125,7 +136,7 @@ const NOMBRES_MES = [
 /** Últimos `cantidadMeses` meses (incluyendo el actual), con totales de ingreso/gasto/balance de cada uno. */
 export function agruparPorMes(
   transacciones: Transaccion[],
-  idCategoriaTransferencia: string | undefined,
+  idsExcluidos: string | CategoriasExcluidas | undefined,
   cantidadMeses = 6,
   referencia: Date = new Date()
 ): ResumenPeriodo[] {
@@ -141,8 +152,8 @@ export function agruparPorMes(
     let gasto = 0;
     for (const t of transacciones) {
       if (!t.fecha.startsWith(prefijo)) continue;
-      if (esIngresoReal(t, idCategoriaTransferencia)) ingreso += t.monto;
-      else if (esGastoReal(t, idCategoriaTransferencia)) gasto += t.monto;
+      if (esIngresoReal(t, idsExcluidos)) ingreso += t.monto;
+      else if (esGastoReal(t, idsExcluidos)) gasto += t.monto;
     }
 
     meses.push({
@@ -160,7 +171,7 @@ export function agruparPorMes(
 /** Un período por cada año que aparece en los datos (orden ascendente), con totales de ingreso/gasto/balance. */
 export function agruparPorAnio(
   transacciones: Transaccion[],
-  idCategoriaTransferencia?: string
+  idsExcluidos?: string | CategoriasExcluidas
 ): ResumenPeriodo[] {
   const totales = new Map<string, { ingreso: number; gasto: number }>();
 
@@ -168,8 +179,8 @@ export function agruparPorAnio(
     const anio = t.fecha.slice(0, 4);
     if (!totales.has(anio)) totales.set(anio, { ingreso: 0, gasto: 0 });
     const acumulado = totales.get(anio)!;
-    if (esIngresoReal(t, idCategoriaTransferencia)) acumulado.ingreso += t.monto;
-    else if (esGastoReal(t, idCategoriaTransferencia)) acumulado.gasto += t.monto;
+    if (esIngresoReal(t, idsExcluidos)) acumulado.ingreso += t.monto;
+    else if (esGastoReal(t, idsExcluidos)) acumulado.gasto += t.monto;
   }
 
   return [...totales.entries()]
@@ -197,7 +208,7 @@ export function calcularProgresoPresupuestos(
   categorias: Categoria[],
   presupuestos: Presupuesto[],
   desde: string,
-  idCategoriaTransferencia?: string
+  idsExcluidos?: string | CategoriasExcluidas
 ): ProgresoPresupuesto[] {
   return presupuestos
     .map((p) => {
@@ -207,7 +218,7 @@ export function calcularProgresoPresupuestos(
         .filter(
           (t) =>
             t.categoriaId === p.categoriaId &&
-            esGastoReal(t, idCategoriaTransferencia) &&
+            esGastoReal(t, idsExcluidos) &&
             t.fecha >= desde
         )
         .reduce((acc, t) => acc + t.monto, 0);

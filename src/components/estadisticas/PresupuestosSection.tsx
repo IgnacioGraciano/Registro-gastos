@@ -9,6 +9,7 @@ import {
   useCollection,
   useMoneda,
   NOMBRE_CATEGORIA_TRANSFERENCIA,
+  NOMBRE_CATEGORIA_PRESTAMO,
 } from "@/lib/db";
 import { calcularProgresoPresupuestos, inicioDeMes } from "@/lib/dashboard";
 import { formatMonto } from "@/lib/format";
@@ -29,17 +30,22 @@ export default function PresupuestosSection() {
   const [error, setError] = useState<string | null>(null);
 
   const idTransferencia = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_TRANSFERENCIA)?.id;
+  const idPrestamo = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_PRESTAMO)?.id;
   const progreso = calcularProgresoPresupuestos(
     transacciones,
     categorias,
     presupuestos,
     inicioDeMes(),
-    idTransferencia
+    [idTransferencia, idPrestamo]
   );
 
-  // Sólo categorías de gasto (con la de Transferencia ya excluida) pueden tener presupuesto.
+  // Sólo categorías de gasto (con Transferencia y Préstamo ya excluidas, porque el capital
+  // prestado no es un gasto real: sólo lo es la eventual pérdida, categorizada aparte).
   const categoriasDeGasto = categorias.filter(
-    (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, "gasto")
+    (c) =>
+      c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA &&
+      c.nombre !== NOMBRE_CATEGORIA_PRESTAMO &&
+      categoriaAplicaA(c, "gasto")
   );
 
   function abrirEdicion(catId: string) {

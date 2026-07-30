@@ -9,6 +9,7 @@ import {
   useCollection,
   useMoneda,
   NOMBRE_CATEGORIA_TRANSFERENCIA,
+  NOMBRE_CATEGORIA_PRESTAMO,
 } from "@/lib/db";
 import { formatMonto } from "@/lib/format";
 import { inicioDeMes, sumarGastosDesde, sumarIngresosDesde } from "@/lib/dashboard";
@@ -22,9 +23,11 @@ export default function BalanceResumen() {
   const [modalAbierto, setModalAbierto] = useState(false);
 
   const idTransferencia = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_TRANSFERENCIA)?.id;
+  const idPrestamo = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_PRESTAMO)?.id;
+  const idsExcluidos = [idTransferencia, idPrestamo];
 
-  const ingresoMes = sumarIngresosDesde(transacciones, inicioDeMes(), idTransferencia);
-  const gastoMes = sumarGastosDesde(transacciones, inicioDeMes(), idTransferencia);
+  const ingresoMes = sumarIngresosDesde(transacciones, inicioDeMes(), idsExcluidos);
+  const gastoMes = sumarGastosDesde(transacciones, inicioDeMes(), idsExcluidos);
   // El balance es la resta entre ingreso y gasto del mes (no la suma de saldos de todas las cuentas).
   const balance = ingresoMes - gastoMes;
   const colorBalance = balance === 0 ? "text-ink" : balance > 0 ? "text-accent" : "text-expense";

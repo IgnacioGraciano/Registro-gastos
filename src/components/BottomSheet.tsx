@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -17,12 +19,18 @@ interface Props {
   footer?: ReactNode;
 }
 
-/** Hoja inferior estándar: fondo oscuro + panel que sube desde abajo, con título, contenido scrolleable y footer fijo opcional. */
+/** Hoja inferior estándar: se renderiza en `#app-overlays` para quedar siempre por encima de la tab bar. */
 export default function BottomSheet({ abierto, onCerrar, titulo, children, footer }: Props) {
-  if (!abierto) return null;
+  const [portalRoot, setPortalRoot] = useState<Element | null>(null);
 
-  return (
-    <div className="absolute inset-0 z-[70] flex flex-col justify-end">
+  useEffect(() => {
+    setPortalRoot(document.getElementById("app-overlays"));
+  }, []);
+
+  if (!abierto || !portalRoot) return null;
+
+  return createPortal(
+    <div className="pointer-events-auto absolute inset-0 z-[100] flex flex-col justify-end">
       <button
         type="button"
         aria-label="Cerrar"
@@ -57,6 +65,7 @@ export default function BottomSheet({ abierto, onCerrar, titulo, children, foote
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    portalRoot
   );
 }

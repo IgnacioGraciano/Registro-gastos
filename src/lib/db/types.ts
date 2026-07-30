@@ -64,6 +64,19 @@ export interface Presupuesto {
   montoMensual: number;
 }
 
+/** Préstamo activo: dinero prestado a otra persona, pendiente de cobro. */
+export interface Prestamo {
+  id: string; // UUID v4
+  persona: string;
+  monto: number; // monto original prestado
+  montoPagado: number;
+  billeteraId: string;
+  /** Gasto vinculado que representa la salida de dinero al prestar. */
+  transaccionId: string;
+  descripcion: string;
+  fecha: string; // formato "YYYY-MM-DD"
+}
+
 /** Toda entidad persistida tiene, como mínimo, un id. */
 export interface Identificable {
   id: string;

@@ -23,6 +23,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Bottom Tab Bar fija al marco del dispositivo (no al viewport) */}
         <BottomNav />
+
+        {/* Capa para modales/sheets: siempre por encima de la tab bar (z-50) */}
+        <div id="app-overlays" className="pointer-events-none absolute inset-0 z-[100]" />
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import {
   useCollection,
   useMoneda,
   NOMBRE_CATEGORIA_TRANSFERENCIA,
+  NOMBRE_CATEGORIA_PRESTAMO,
 } from "@/lib/db";
 import { agruparPorAnio, agruparPorMes } from "@/lib/dashboard";
 import GraficoComparativo from "@/components/estadisticas/GraficoComparativo";
@@ -19,6 +20,8 @@ export default function EstadisticasPage() {
   const [vista, setVista] = useState<"mensual" | "anual">("mensual");
 
   const idTransferencia = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_TRANSFERENCIA)?.id;
+  const idPrestamo = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_PRESTAMO)?.id;
+  const idsExcluidos = [idTransferencia, idPrestamo];
 
   const periodos =
     vista === "mensual"
@@ -31,9 +34,9 @@ export default function EstadisticasPage() {
           // Contar cuántos meses hay entre el primer dato y hoy
           const totalMeses =
             (hoy.getFullYear() - anioMin) * 12 + (hoy.getMonth() + 1 - mesMin) + 1;
-          return agruparPorMes(transacciones, idTransferencia, Math.max(totalMeses, 1));
+          return agruparPorMes(transacciones, idsExcluidos, Math.max(totalMeses, 1));
         })()
-      : agruparPorAnio(transacciones, idTransferencia);
+      : agruparPorAnio(transacciones, idsExcluidos);
 
   return (
     <div className="flex flex-col gap-6 px-5 pb-4 pt-[calc(var(--safe-top)+16px)]">
@@ -88,7 +91,7 @@ export default function EstadisticasPage() {
             moneda={moneda}
             transacciones={transacciones}
             categorias={categorias}
-            idCategoriaTransferencia={idTransferencia}
+            idsExcluidos={idsExcluidos}
           />
         )}
       </section>

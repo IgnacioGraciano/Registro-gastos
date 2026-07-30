@@ -7,6 +7,7 @@ import {
   useCollection,
   useMoneda,
   NOMBRE_CATEGORIA_TRANSFERENCIA,
+  NOMBRE_CATEGORIA_PRESTAMO,
 } from "@/lib/db";
 import { agruparPorCategoria, inicioDeMes } from "@/lib/dashboard";
 import { formatMonto } from "@/lib/format";
@@ -25,7 +26,14 @@ export default function DistribucionCategorias() {
   );
 
   const idTransferencia = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_TRANSFERENCIA)?.id;
-  const distribucion = agruparPorCategoria(transacciones, categorias, inicioDeMes(), tipo, idTransferencia);
+  const idPrestamo = categorias.find((c) => c.nombre === NOMBRE_CATEGORIA_PRESTAMO)?.id;
+  const distribucion = agruparPorCategoria(
+    transacciones,
+    categorias,
+    inicioDeMes(),
+    tipo,
+    [idTransferencia, idPrestamo]
+  );
 
   return (
     <section>

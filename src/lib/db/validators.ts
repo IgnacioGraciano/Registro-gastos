@@ -1,4 +1,4 @@
-import type { Billetera, Categoria, Presupuesto, Suscripcion, Transaccion } from "./types";
+import type { Billetera, Categoria, Presupuesto, Prestamo, Suscripcion, Transaccion } from "./types";
 
 /**
  * Type guards usados al LEER de localStorage. Si el dato fue editado a mano,
@@ -82,4 +82,18 @@ export function esSuscripcion(v: unknown): v is Suscripcion {
 export function esPresupuesto(v: unknown): v is Presupuesto {
   if (!esObjeto(v)) return false;
   return esString(v.id) && esString(v.categoriaId) && esNumeroFinito(v.montoMensual);
+}
+
+export function esPrestamo(v: unknown): v is Prestamo {
+  if (!esObjeto(v)) return false;
+  return (
+    esString(v.id) &&
+    esString(v.persona) &&
+    esNumeroFinito(v.monto) &&
+    esNumeroFinito(v.montoPagado) &&
+    esString(v.billeteraId) &&
+    esString(v.transaccionId) &&
+    esString(v.descripcion) &&
+    esFechaISO(v.fecha)
+  );
 }
