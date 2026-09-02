@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { ChevronLeft, Plus } from "lucide-react";
-import { billeterasRepo, categoriasRepo, suscripcionesRepo, useCollection, useMoneda } from "@/lib/db";
+import {
+  billeterasRepo,
+  categoriasRepo,
+  suscripcionesRepo,
+  useCollection,
+  useMoneda,
+  type Suscripcion,
+} from "@/lib/db";
 import { formatMonto } from "@/lib/format";
 import SuscripcionRow from "@/components/suscripciones/SuscripcionRow";
 import NuevaSuscripcionModal from "@/components/suscripciones/NuevaSuscripcionModal";
@@ -18,6 +25,7 @@ export default function SuscripcionesOverlay({ abierto, onCerrar }: Props) {
   const categorias = useCollection(categoriasRepo);
   const moneda = useMoneda();
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [enEdicion, setEnEdicion] = useState<Suscripcion | null>(null);
 
   if (!abierto) return null;
 
@@ -45,7 +53,10 @@ export default function SuscripcionesOverlay({ abierto, onCerrar }: Props) {
         <h1 className="flex-1 text-[17px] font-bold text-ink">Suscripciones</h1>
         <button
           type="button"
-          onClick={() => setModalAbierto(true)}
+          onClick={() => {
+            setEnEdicion(null);
+            setModalAbierto(true);
+          }}
           aria-label="Nueva suscripción"
           className="ios-press flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white shadow-card"
         >
@@ -77,6 +88,10 @@ export default function SuscripcionesOverlay({ abierto, onCerrar }: Props) {
                 billetera={billeteras.find((b) => b.id === s.billeteraId)}
                 categoria={categorias.find((c) => c.id === s.categoriaId)}
                 onEliminar={() => suscripcionesRepo.eliminar(s.id)}
+                onEditar={() => {
+                  setEnEdicion(s);
+                  setModalAbierto(true);
+                }}
               />
             ))
           )}
@@ -84,12 +99,19 @@ export default function SuscripcionesOverlay({ abierto, onCerrar }: Props) {
 
         {ordenadasPorProximoPago.length > 0 && (
           <p className="mb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)] mt-2 px-1 text-center text-[11.5px] text-ink-faint">
-            Deslizá una suscripción hacia la izquierda para eliminarla.
+            Tocá una suscripción para editarla. Deslizala hacia la izquierda para eliminarla.
           </p>
         )}
       </div>
 
-      <NuevaSuscripcionModal abierto={modalAbierto} onCerrar={() => setModalAbierto(false)} />
+      <NuevaSuscripcionModal
+        abierto={modalAbierto}
+        suscripcion={enEdicion}
+        onCerrar={() => {
+          setModalAbierto(false);
+          setEnEdicion(null);
+        }}
+      />
     </div>
   );
 }

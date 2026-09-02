@@ -8,6 +8,7 @@ import {
   suscripcionesRepo,
   useCollection,
   NOMBRE_CATEGORIA_TRANSFERENCIA,
+  type Suscripcion,
 } from "@/lib/db";
 import { hoyISO } from "@/lib/format";
 import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
@@ -17,6 +18,8 @@ import { obtenerIconoCategoria } from "@/lib/icons";
 interface Props {
   abierto: boolean;
   onCerrar: () => void;
+  /** Si se pasa, el modal edita esta suscripción en vez de crear una nueva. */
+  suscripcion?: Suscripcion | null;
 }
 
 /**
@@ -24,8 +27,12 @@ interface Props {
  * suscripción" quede SIEMPRE anclado al fondo real de la pantalla, sin
  * importar cuánto contenido tenga el formulario — mismo patrón ya probado
  * en Nueva Carga (alto garantizado + footer fijo).
+ *
+ * Sirve tanto para crear como para editar: si se pasa `suscripcion`, el
+ * formulario arranca precargado con sus datos y al guardar actualiza en
+ * vez de crear.
  */
-export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
+export default function NuevaSuscripcionModal({ abierto, onCerrar, suscripcion }: Props) {
   const billeteras = useCollection(billeterasRepo);
   // Una suscripción siempre se debita como "gasto": se excluye la categoría de sistema
   // Transferencia y las categorías creadas específicamente para ingresos.
@@ -42,18 +49,21 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState(false);
 
+  const editando = suscripcion != null;
+
   useEffect(() => {
     if (abierto) {
-      setNombre("");
-      setMontoStr("");
-      setBilleteraId(null);
-      setCategoriaId(null);
-      setFrecuencia("mensual");
-      setProximoPago(hoyISO());
+      setNombre(suscripcion?.nombre ?? "");
+      setMontoStr(suscripcion ? String(suscripcion.monto) : "");
+      setBilleteraId(suscripcion?.billeteraId ?? null);
+      setCategoriaId(suscripcion?.categoriaId ?? null);
+      setFrecuencia(suscripcion?.frecuencia ?? "mensual");
+      setProximoPago(suscripcion?.proximoPago ?? hoyISO());
       setError(null);
       setExito(false);
     }
-  }, [abierto]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [abierto, suscripcion?.id]);
 
   if (!abierto) return null;
 
@@ -69,19 +79,28 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
   function guardar() {
     if (!billeteraId || !categoriaId) return;
     try {
-      suscripcionesRepo.crear({
+      const datos = {
         nombre: nombre.trim(),
         monto,
         billeteraId,
         categoriaId,
         frecuencia,
         proximoPago,
-      });
+      };
+      if (editando && suscripcion) {
+        suscripcionesRepo.actualizar(suscripcion.id, datos);
+      } else {
+        suscripcionesRepo.crear(datos);
+      }
       setError(null);
       setExito(true);
       setTimeout(onCerrar, 700);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo crear la suscripción.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : `No se pudo ${editando ? "guardar" : "crear"} la suscripción.`
+      );
     }
   }
 
@@ -96,7 +115,9 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
         >
           <ChevronLeft size={18} className="text-ink" />
         </button>
-        <h1 className="text-[17px] font-bold text-ink">Nueva suscripción</h1>
+        <h1 className="text-[17px] font-bold text-ink">
+          {editando ? "Editar suscripción" : "Nueva suscripción"}
+        </h1>
       </header>
 
       <div className="no-scrollbar scroll-contenido min-h-0 flex-1 overflow-y-auto px-5 py-4">
@@ -105,7 +126,9 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-white shadow-fab animate-pop-in">
               <Check size={30} strokeWidth={3} />
             </div>
-            <p className="text-[15px] font-semibold text-ink">¡Suscripción creada!</p>
+            <p className="text-[15px] font-semibold text-ink">
+              {editando ? "¡Suscripción actualizada!" : "¡Suscripción creada!"}
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -238,7 +261,7 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar }: Props) {
               puedeGuardar ? "bg-brand" : "bg-brand/25"
             }`}
           >
-            Crear suscripción
+            {editando ? "Guardar cambios" : "Crear suscripción"}
           </button>
         </div>
       )}

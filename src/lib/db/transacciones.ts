@@ -2,6 +2,7 @@ import { createCollection } from "./collection";
 import { esTransaccion } from "./validators";
 import type { Transaccion } from "./types";
 import { billeterasRepo } from "./billeteras";
+import { compararRecientePrimero } from "./orden";
 
 const KEY = "transacciones";
 const base = createCollection<Transaccion>(KEY, esTransaccion);
@@ -44,8 +45,8 @@ export const transaccionesRepo = {
   ...base,
 
   /** Crea la transacción y aplica su efecto (+/-) sobre el saldo de la billetera. */
-  crear(data: Omit<Transaccion, "id" | "descripcion"> & { descripcion?: string }): Transaccion {
-    const completa = { descripcion: "", ...data };
+  crear(data: Omit<Transaccion, "id" | "descripcion" | "creadoEn"> & { descripcion?: string }): Transaccion {
+    const completa = { descripcion: "", ...data, creadoEn: Date.now() };
     validar(completa);
     const nueva = base.create(completa);
     billeterasRepo.ajustarSaldo(nueva.billeteraId, signo(nueva.tipo) * nueva.monto);
@@ -94,11 +95,11 @@ export const transaccionesRepo = {
     return base
       .getAll()
       .filter((t) => t.billeteraId === billeteraId)
-      .sort((a, b) => b.fecha.localeCompare(a.fecha));
+      .sort(compararRecientePrimero);
   },
 
   /** Todas las transacciones ordenadas de la más reciente a la más vieja. */
   ordenadasPorFecha(): Transaccion[] {
-    return [...base.getAll()].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    return [...base.getAll()].sort(compararRecientePrimero);
   },
 };

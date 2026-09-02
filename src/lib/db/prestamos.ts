@@ -2,6 +2,7 @@ import { createCollection } from "./collection";
 import { esPrestamo } from "./validators";
 import { categoriasRepo } from "./categorias";
 import { transaccionesRepo } from "./transacciones";
+import { compararRecientePrimero } from "./orden";
 import {
   NOMBRE_CATEGORIA_PRESTAMO,
   NOMBRE_CATEGORIA_GANANCIA_PRESTAMO,
@@ -105,6 +106,7 @@ export function migrarPrestamosZustand(): void {
         transaccionId: transaccion.id,
         descripcion: p.descripcion?.trim() ?? "",
         fecha: p.fecha,
+        creadoEn: Date.now(),
       });
     }
 
@@ -121,7 +123,7 @@ export const prestamosRepo = {
     return base
       .getAll()
       .filter((p) => p.montoPagado < p.monto)
-      .sort((a, b) => b.fecha.localeCompare(a.fecha));
+      .sort(compararRecientePrimero);
   },
 
   montoPendiente(prestamo: Prestamo): number {
@@ -165,6 +167,7 @@ export const prestamosRepo = {
       transaccionId: transaccion.id,
       descripcion: data.descripcion?.trim() ?? "",
       fecha: data.fecha,
+      creadoEn: Date.now(),
     });
   },
 

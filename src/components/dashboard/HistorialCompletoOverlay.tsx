@@ -8,9 +8,11 @@ import {
   prestamosRepo,
   transaccionesRepo,
   useCollection,
+  NOMBRE_CATEGORIA_PRESTAMO,
   type Prestamo,
   type Transaccion,
 } from "@/lib/db";
+import { compararRecientePrimero } from "@/lib/db/orden";
 import { inicioDeMes } from "@/lib/dashboard";
 import MovimientoRow from "./MovimientoRow";
 import PrestamoRow from "./PrestamoRow";
@@ -28,8 +30,8 @@ interface Props {
 }
 
 type ItemHistorial =
-  | { tipo: "transaccion"; transaccion: Transaccion; fecha: string }
-  | { tipo: "prestamo"; prestamo: Prestamo; fecha: string };
+  | { tipo: "transaccion"; transaccion: Transaccion; fecha: string; creadoEn?: number }
+  | { tipo: "prestamo"; prestamo: Prestamo; fecha: string; creadoEn?: number };
 
 export default function HistorialCompletoOverlay({
   abierto,
@@ -50,14 +52,16 @@ export default function HistorialCompletoOverlay({
   const desde = desdeHasta?.desde ?? (soloMesActual ? inicioDeMes() : null);
   const hasta = desdeHasta?.hasta ?? null;
 
-  const idsGastosPrestamo = new Set(
-    prestamos
-      .filter((p) => prestamosRepo.montoPendiente(p) > 0)
-      .map((p) => p.transaccionId)
-  );
+  // El capital de un préstamo (prestarlo y recuperarlo) es un movimiento de
+  // plata propio, no un ingreso/gasto real: no queda registro en el
+  // historial, prestado o ya saldado. Sólo dejan rastro la ganancia o la
+  // pérdida real de un préstamo (categorías separadas, sin excluir acá).
+  const idCategoriaPrestamo = categoriasRepo
+    .getAll()
+    .find((c) => c.nombre === NOMBRE_CATEGORIA_PRESTAMO)?.id;
 
   const transaccionesFiltradas = transacciones.filter((t) => {
-    if (idsGastosPrestamo.has(t.id)) return false;
+    if (idCategoriaPrestamo && t.categoriaId === idCategoriaPrestamo) return false;
     if (categoriaId && t.categoriaId !== categoriaId) return false;
     if (desde && t.fecha < desde) return false;
     if (hasta && t.fecha > hasta) return false;
@@ -74,9 +78,19 @@ export default function HistorialCompletoOverlay({
       });
 
   const items: ItemHistorial[] = [
-    ...transaccionesFiltradas.map((t) => ({ tipo: "transaccion" as const, transaccion: t, fecha: t.fecha })),
-    ...prestamosFiltrados.map((p) => ({ tipo: "prestamo" as const, prestamo: p, fecha: p.fecha })),
-  ].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    ...transaccionesFiltradas.map((t) => ({
+      tipo: "transaccion" as const,
+      transaccion: t,
+      fecha: t.fecha,
+      creadoEn: t.creadoEn,
+    })),
+    ...prestamosFiltrados.map((p) => ({
+      tipo: "prestamo" as const,
+      prestamo: p,
+      fecha: p.fecha,
+      creadoEn: p.creadoEn,
+    })),
+  ].sort(compararRecientePrimero);
 
   return (
     <div className="absolute inset-0 z-[80] flex flex-col bg-surface-base">

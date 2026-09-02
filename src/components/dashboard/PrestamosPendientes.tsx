@@ -1,6 +1,7 @@
 "use client";
 
 import { billeterasRepo, prestamosRepo, useCollection, useMoneda } from "@/lib/db";
+import { compararRecientePrimero } from "@/lib/db/orden";
 import { formatMonto } from "@/lib/format";
 import PrestamoRow from "./PrestamoRow";
 
@@ -11,7 +12,7 @@ export default function PrestamosPendientes() {
 
   const pendientes = prestamos
     .filter((p) => prestamosRepo.montoPendiente(p) > 0)
-    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+    .sort(compararRecientePrimero);
 
   if (pendientes.length === 0) return null;
 

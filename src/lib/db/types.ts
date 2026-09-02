@@ -15,6 +15,13 @@ export interface Transaccion {
   categoriaId: string; // referencia a Categoria.id
   descripcion: string;
   fecha: string; // formato "YYYY-MM-DD"
+  /**
+   * Timestamp de creación (ms desde epoch). OPCIONAL: sólo existe en
+   * transacciones creadas después de agregar este campo; se usa para
+   * desempatar el orden entre movimientos del mismo día (el más nuevo
+   * primero). Datos viejos sin este campo siguen funcionando igual.
+   */
+  creadoEn?: number;
 }
 
 export interface Billetera {
@@ -75,6 +82,8 @@ export interface Prestamo {
   transaccionId: string;
   descripcion: string;
   fecha: string; // formato "YYYY-MM-DD"
+  /** Igual que en Transaccion: desempata el orden entre préstamos del mismo día. */
+  creadoEn?: number;
 }
 
 /** Toda entidad persistida tiene, como mínimo, un id. */

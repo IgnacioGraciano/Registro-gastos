@@ -9,6 +9,7 @@ import {
   useMoneda,
   type Prestamo,
 } from "@/lib/db";
+import { compararRecientePrimero } from "@/lib/db/orden";
 import { formatMonto, hoyISO } from "@/lib/format";
 import BottomSheet from "@/components/BottomSheet";
 
@@ -52,7 +53,7 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
 
   const pendientes = prestamos
     .filter((p) => prestamosRepo.montoPendiente(p) > 0)
-    .sort((a, b) => b.fecha.localeCompare(a.fecha));
+    .sort(compararRecientePrimero);
 
   const totalPendiente = prestamosRepo.totalPendiente();
 

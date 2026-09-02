@@ -11,6 +11,7 @@ interface Props {
   billetera: Billetera | undefined;
   categoria: Categoria | undefined;
   onEliminar: () => void;
+  onEditar: () => void;
 }
 
 const ANCHO_ACCION = 76; // px
@@ -20,9 +21,16 @@ const ANCHO_ACCION = 76; // px
  * pointer events (frágil: hay que distinguir swipe horizontal de scroll
  * vertical, manejar inercia, etc.), se usa scroll-snap nativo: la fila es
  * en sí un mini-carrusel horizontal con dos "páginas" (contenido / acción
- * eliminar). El navegador se encarga de toda la física del gesto.
+ * eliminar). El navegador se encarga de toda la física del gesto. Tocar el
+ * contenido (sin deslizar) abre la edición, igual que en MovimientoRow.
  */
-export default function SuscripcionRow({ suscripcion, billetera, categoria, onEliminar }: Props) {
+export default function SuscripcionRow({
+  suscripcion,
+  billetera,
+  categoria,
+  onEliminar,
+  onEditar,
+}: Props) {
   const Icono = categoria ? obtenerIconoCategoria(categoria.icono) : null;
   const moneda = useMoneda();
 
@@ -33,9 +41,11 @@ export default function SuscripcionRow({ suscripcion, billetera, categoria, onEl
         style={{ scrollSnapType: "x mandatory", containerType: "inline-size" } as React.CSSProperties}
       >
         <div className="flex w-max">
-          {/* Página 1: contenido de la suscripción */}
-          <div
-            className="flex shrink-0 items-center gap-3 p-3"
+          {/* Página 1: contenido de la suscripción, tocar abre edición */}
+          <button
+            type="button"
+            onClick={onEditar}
+            className="flex shrink-0 items-center gap-3 p-3 text-left"
             style={{ width: "100cqw", scrollSnapAlign: "start" } as React.CSSProperties}
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-soft text-gold">
@@ -50,7 +60,7 @@ export default function SuscripcionRow({ suscripcion, billetera, categoria, onEl
             <p className="figure-amount shrink-0 text-[14px] font-semibold text-expense">
               {formatMonto(suscripcion.monto, moneda)}
             </p>
-          </div>
+          </button>
 
           {/* Página 2: acción de eliminar, revelada al deslizar a la izquierda */}
           <button
