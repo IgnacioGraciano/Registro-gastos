@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Categoria, Transaccion } from "@/lib/db";
 import { agruparPorCategoria, rangoDePeriodo, type CategoriasExcluidas, type ResumenPeriodo } from "@/lib/dashboard";
 import { formatMonto, type Moneda } from "@/lib/format";
@@ -29,6 +29,14 @@ export default function GraficoComparativo({
   const [tipoDetalle, setTipoDetalle] = useState<"gasto" | "ingreso">("gasto");
   const [historialCategoria, setHistorialCategoria] = useState<{ id: string; nombre: string } | null>(null);
 
+  // Con muchos períodos el gráfico scrollea: arranca mostrando los más recientes
+  // (a la derecha), que es donde está el período seleccionado por defecto.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
+
   const maxValor = Math.max(1, ...periodos.flatMap((p) => [p.ingreso, p.gasto]));
   const actual = periodos[seleccionado] ?? periodos[periodos.length - 1];
 
@@ -45,6 +53,7 @@ export default function GraficoComparativo({
     <div>
       {/* Barras — con scroll horizontal si hay más de 6 períodos */}
       <div
+        ref={scrollRef}
         className="no-scrollbar overflow-x-auto"
         style={{ scrollSnapType: necesitaScroll ? "x mandatory" : undefined } as React.CSSProperties}
       >

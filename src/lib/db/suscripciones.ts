@@ -93,18 +93,4 @@ export const suscripcionesRepo = {
       diaDeCobro,
     });
   },
-
-  /** Suscripciones cuyo próximo pago cae dentro de los próximos `dias` (por defecto 7). */
-  proximasAVencer(dias = 7): Suscripcion[] {
-    const hoy = new Date();
-    const limite = new Date();
-    limite.setDate(hoy.getDate() + dias);
-    return base
-      .getAll()
-      .filter((s) => {
-        const fecha = new Date(s.proximoPago);
-        return fecha >= hoy && fecha <= limite;
-      })
-      .sort((a, b) => a.proximoPago.localeCompare(b.proximoPago));
-  },
 };

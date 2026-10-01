@@ -60,6 +60,18 @@ export function sumarIngresosDesde(
     .reduce((acc, t) => acc + t.monto, 0);
 }
 
+/** Id ficticio para agrupar los movimientos cuya categoría fue eliminada. */
+export const ID_SIN_CATEGORIA = "__sin_categoria__";
+
+/** Categoría ficticia (no se guarda) con la que se muestran los movimientos huérfanos. */
+export const CATEGORIA_SIN_CATEGORIA: Categoria = {
+  id: ID_SIN_CATEGORIA,
+  nombre: "Sin categoría",
+  icono: "Tag",
+  esEditable: false,
+  color: "#8FA3C4",
+};
+
 export interface CategoriaConMonto {
   categoria: Categoria;
   monto: number;
@@ -77,19 +89,26 @@ export function agruparPorCategoria(
 ): CategoriaConMonto[] {
   const esReal = tipo === "gasto" ? esGastoReal : esIngresoReal;
   const totalPorCategoria = new Map<string, number>();
+  const idsExistentes = new Set(categorias.map((c) => c.id));
 
   for (const t of transacciones) {
     if (!esReal(t, idsExcluidos) || t.fecha < desde) continue;
     if (hasta && t.fecha > hasta) continue;
-    totalPorCategoria.set(t.categoriaId, (totalPorCategoria.get(t.categoriaId) ?? 0) + t.monto);
+    // Si la categoría fue eliminada, el movimiento se agrupa en "Sin categoría": así el
+    // desglose siempre suma lo mismo que el total del período.
+    const clave = idsExistentes.has(t.categoriaId) ? t.categoriaId : ID_SIN_CATEGORIA;
+    totalPorCategoria.set(clave, (totalPorCategoria.get(clave) ?? 0) + t.monto);
   }
 
   const totalGeneral = [...totalPorCategoria.values()].reduce((a, b) => a + b, 0);
 
   const resultado: CategoriaConMonto[] = [];
   for (const [categoriaId, monto] of totalPorCategoria) {
-    const categoria = categorias.find((c) => c.id === categoriaId);
-    if (!categoria) continue; // categoría borrada/huérfana: se ignora de forma defensiva
+    const categoria =
+      categoriaId === ID_SIN_CATEGORIA
+        ? CATEGORIA_SIN_CATEGORIA
+        : categorias.find((c) => c.id === categoriaId);
+    if (!categoria) continue;
     resultado.push({
       categoria,
       monto,

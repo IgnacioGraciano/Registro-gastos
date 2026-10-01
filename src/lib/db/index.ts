@@ -20,7 +20,17 @@ export { transaccionesRepo } from "./transacciones";
 export { suscripcionesRepo } from "./suscripciones";
 export { presupuestosRepo } from "./presupuestos";
 export { prestamosRepo, migrarPrestamosZustand } from "./prestamos";
-export { registrarTransferencia } from "./transferencias";
+export {
+  actualizarTransferencia,
+  eliminarMovimiento,
+  esTransferencia,
+  registrarTransferencia,
+} from "./transferencias";
+export {
+  contarMovimientosDeCategoria,
+  eliminarCategoriaSegura,
+  motivoNoSePuedeEliminarCategoria,
+} from "./eliminarCategoria";
 export {
   contarMovimientosDeBilletera,
   eliminarBilleteraSegura,

@@ -22,6 +22,12 @@ export interface Transaccion {
    * primero). Datos viejos sin este campo siguen funcionando igual.
    */
   creadoEn?: number;
+  /**
+   * Sólo en las dos patas de una transferencia entre cuentas: ambas comparten
+   * el mismo valor, para poder editarlas/borrarlas juntas. OPCIONAL: las
+   * transferencias viejas no lo tienen (ver `buscarParTransferencia`).
+   */
+  transferenciaId?: string;
 }
 
 export interface Billetera {

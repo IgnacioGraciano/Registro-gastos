@@ -46,17 +46,26 @@ export const categoriasRepo = {
   },
 
   /**
-   * Persiste un nuevo orden dado un array de IDs en el orden deseado.
-   * Asigna `orden: 0, 1, 2, ...` según la posición en el array.
-   * Las categorías que no estén en el array (ej. la de Transferencia) no se tocan.
+   * Persiste un nuevo orden para un SUBCONJUNTO de categorías (las visibles en
+   * la pestaña Gastos o Ingresos), dado un array con sus IDs en el orden deseado.
+   *
+   * Las categorías del subconjunto se reacomodan entre sí usando los mismos
+   * "lugares" que ya ocupaban en la lista completa; las que no están en el
+   * array no se mueven. Después se renumera TODA la lista (0, 1, 2, ...), así
+   * nunca quedan dos categorías con el mismo `orden` y reordenar una pestaña
+   * no desordena la otra.
    */
   reordenar(idsEnOrden: string[]): void {
-    const todas = base.getAll();
-    const actualizadas = todas.map((c) => {
-      const nuevoOrden = idsEnOrden.indexOf(c.id);
-      return nuevoOrden === -1 ? c : { ...c, orden: nuevoOrden };
-    });
-    base.replaceAll(actualizadas);
+    const ordenadas = this.getOrdenadas();
+    const enSubconjunto = new Set(idsEnOrden);
+    const porId = new Map(ordenadas.map((c) => [c.id, c]));
+    const cola = idsEnOrden.filter((id) => porId.has(id));
+
+    let siguiente = 0;
+    const resultado = ordenadas.map((c) =>
+      enSubconjunto.has(c.id) ? porId.get(cola[siguiente++])! : c
+    );
+    base.replaceAll(resultado.map((c, indice) => ({ ...c, orden: indice })));
   },
 
   /**

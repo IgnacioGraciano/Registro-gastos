@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
-import { categoriasRepo, useCollection, NOMBRE_CATEGORIA_TRANSFERENCIA, type Categoria } from "@/lib/db";
+import {
+  categoriasRepo,
+  contarMovimientosDeCategoria,
+  eliminarCategoriaSegura,
+  motivoNoSePuedeEliminarCategoria,
+  NOMBRE_CATEGORIA_TRANSFERENCIA,
+  type Categoria,
+} from "@/lib/db";
 import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
 import { categoriaAplicaA, obtenerColorCategoria } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
@@ -18,6 +25,8 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
   const [tipoActivo, setTipoActivo] = useState<"gasto" | "ingreso">("gasto");
   const [formAbierto, setFormAbierto] = useState(false);
   const [categoriaEditando, setCategoriaEditando] = useState<Categoria | null>(null);
+  const [confirmarEliminarId, setConfirmarEliminarId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   if (!abierto) return null;
 
@@ -35,12 +44,27 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
     setFormAbierto(true);
   }
 
-  function eliminar(id: string) {
-    try {
-      categoriasRepo.eliminar(id);
-    } catch {
-      // Categoría no editable: el botón de eliminar ni se muestra para esos casos.
+  /** Primer toque en el tacho: o avisa por qué no se puede, o pide confirmación. */
+  function pedirEliminar(id: string) {
+    const motivo = motivoNoSePuedeEliminarCategoria(id);
+    if (motivo) {
+      setConfirmarEliminarId(null);
+      setError(motivo);
+      return;
     }
+    setError(null);
+    setConfirmarEliminarId(id);
+  }
+
+  function confirmarEliminar() {
+    if (!confirmarEliminarId) return;
+    try {
+      eliminarCategoriaSegura(confirmarEliminarId);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar la categoría.");
+    }
+    setConfirmarEliminarId(null);
   }
 
   function mover(indice: number, direccion: -1 | 1) {
@@ -102,6 +126,8 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
           </button>
         </div>
 
+        {error && <p className="mb-3 text-center text-[12.5px] font-medium text-expense">{error}</p>}
+
         {/* Lista */}
         <div className="flex flex-col gap-2 pb-[calc(var(--tabbar-height)+var(--safe-bottom)+8px)]">
           {categoriasDelTipo.length === 0 && (
@@ -113,7 +139,8 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
             const Icono = obtenerIconoCategoria(c.icono);
             const color = obtenerColorCategoria(c, categorias);
             return (
-              <div key={c.id} className="flex items-center gap-2 rounded-ios bg-surface p-3 shadow-card">
+              <div key={c.id} className="rounded-ios bg-surface p-3 shadow-card">
+              <div className="flex items-center gap-2">
                 {/* Botones de reordenamiento */}
                 <div className="flex flex-col gap-0.5">
                   <button
@@ -161,7 +188,7 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => eliminar(c.id)}
+                      onClick={() => pedirEliminar(c.id)}
                       aria-label={`Eliminar categoría ${c.nombre}`}
                       className="ios-press flex h-8 w-8 items-center justify-center rounded-full bg-expense-soft text-expense"
                     >
@@ -170,6 +197,36 @@ export default function CategoriasOverlay({ abierto, onCerrar }: Props) {
                   </>
                 ) : (
                   <span className="text-[11px] text-ink-faint">fija</span>
+                )}
+              </div>
+
+                {confirmarEliminarId === c.id && (
+                  <div className="mt-3 rounded-ios bg-expense-soft p-3">
+                    <p className="mb-2 text-center text-[12.5px] font-medium text-expense">
+                      {(() => {
+                        const movimientos = contarMovimientosDeCategoria(c.id);
+                        return movimientos > 0
+                          ? `¿Eliminar "${c.nombre}"? Sus ${movimientos} movimiento${movimientos > 1 ? "s" : ""} no se borran: quedan como "Sin categoría".`
+                          : `¿Eliminar "${c.nombre}"?`;
+                      })()}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmarEliminarId(null)}
+                        className="ios-press flex-1 rounded-ios bg-surface py-2 text-[13px] font-semibold text-ink"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmarEliminar}
+                        className="ios-press flex-1 rounded-ios bg-expense py-2 text-[13px] font-semibold text-white"
+                      >
+                        Sí, eliminar
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             );

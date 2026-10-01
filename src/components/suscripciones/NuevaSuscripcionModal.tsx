@@ -5,6 +5,7 @@ import { Check, ChevronLeft, Wallet } from "lucide-react";
 import {
   billeterasRepo,
   categoriasRepo,
+  procesarDebitosPendientes,
   suscripcionesRepo,
   useCollection,
   type Suscripcion,
@@ -91,6 +92,8 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar, suscripcion }
       } else {
         suscripcionesRepo.crear(datos);
       }
+      // Si el próximo pago es hoy (o ya pasó), se debita ahora y no recién al reabrir la app.
+      procesarDebitosPendientes();
       setError(null);
       setExito(true);
       setTimeout(onCerrar, 700);

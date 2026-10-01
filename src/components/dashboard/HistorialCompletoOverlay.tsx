@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import {
   billeterasRepo,
   categoriasRepo,
+  eliminarMovimiento,
   prestamosRepo,
   transaccionesRepo,
   useCollection,
@@ -14,7 +15,7 @@ import {
   type Transaccion,
 } from "@/lib/db";
 import { compararRecientePrimero } from "@/lib/db/orden";
-import { inicioDeMes } from "@/lib/dashboard";
+import { ID_SIN_CATEGORIA, inicioDeMes } from "@/lib/dashboard";
 import MovimientoRow from "./MovimientoRow";
 import PrestamoRow from "./PrestamoRow";
 import EditarMovimientoSheet from "./EditarMovimientoSheet";
@@ -71,7 +72,12 @@ export default function HistorialCompletoOverlay({
 
   const transaccionesFiltradas = transacciones.filter((t) => {
     if (idCategoriaPrestamo && t.categoriaId === idCategoriaPrestamo) return false;
-    if (categoriaId && t.categoriaId !== categoriaId) return false;
+    if (categoriaId === ID_SIN_CATEGORIA) {
+      // "Sin categoría": movimientos cuya categoría fue eliminada.
+      if (categorias.some((c) => c.id === t.categoriaId)) return false;
+    } else if (categoriaId && t.categoriaId !== categoriaId) {
+      return false;
+    }
     if (desde && t.fecha < desde) return false;
     if (hasta && t.fecha > hasta) return false;
     return true;
@@ -138,7 +144,7 @@ export default function HistorialCompletoOverlay({
                     transaccion={item.transaccion}
                     billetera={billeteras.find((b) => b.id === item.transaccion.billeteraId)}
                     categoria={categorias.find((c) => c.id === item.transaccion.categoriaId)}
-                    onEliminar={() => transaccionesRepo.eliminar(item.transaccion.id)}
+                    onEliminar={() => eliminarMovimiento(item.transaccion.id)}
                     onEditar={() => setEnEdicion(item.transaccion)}
                   />
                 )

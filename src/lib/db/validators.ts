@@ -36,7 +36,8 @@ export function esTransaccion(v: unknown): v is Transaccion {
     esString(v.billeteraId) &&
     esString(v.categoriaId) &&
     esString(v.descripcion) &&
-    esFechaISO(v.fecha)
+    esFechaISO(v.fecha) &&
+    (v.transferenciaId === undefined || esString(v.transferenciaId))
   );
 }
 

@@ -11,7 +11,7 @@ import {
   NOMBRE_CATEGORIA_TRANSFERENCIA,
   NOMBRE_CATEGORIA_PRESTAMO,
 } from "@/lib/db";
-import { formatMonto } from "@/lib/format";
+import { formatMonto, MONEDAS_DISPONIBLES } from "@/lib/format";
 import { inicioDeMes, sumarGastosDesde, sumarIngresosDesde } from "@/lib/dashboard";
 import TransferenciaModal from "./TransferenciaModal";
 
@@ -55,11 +55,15 @@ export default function BalanceResumen() {
           {(() => {
             // Separo el signo + símbolo del número puro para que sean más chicos
             const abs = Math.abs(balance);
+            const simbolo = MONEDAS_DISPONIBLES.find((m) => m.codigo === moneda)?.simbolo ?? "$";
             const numStr = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(abs);
             const tamano = numStr.length <= 7 ? "text-[30px]" : numStr.length <= 10 ? "text-[24px]" : "text-[20px]";
             return (
               <p className={`figure-amount mt-0.5 font-bold leading-tight ${tamano} ${colorBalance}`}>
-                <span className="text-[0.6em]">{balance < 0 ? "-$" : "$"}</span>
+                <span className="text-[0.6em]">
+                  {balance < 0 ? "-" : ""}
+                  {simbolo}
+                </span>
                 {numStr}
               </p>
             );

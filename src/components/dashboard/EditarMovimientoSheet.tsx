@@ -5,6 +5,9 @@ import { Calendar, Trash2, Wallet } from "lucide-react";
 import {
   billeterasRepo,
   categoriasRepo,
+  actualizarTransferencia,
+  eliminarMovimiento,
+  esTransferencia,
   transaccionesRepo,
   useCollection,
   type Transaccion,
@@ -57,6 +60,9 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
 
   if (!transaccion) return null;
 
+  // Las dos patas de una transferencia se editan/borran siempre juntas.
+  const esTransf = esTransferencia(transaccion);
+
   const categoriasDisponibles = categorias.filter(
     (c) => esCategoriaElegible(c) && categoriaAplicaA(c, tipo)
   );
@@ -78,6 +84,11 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
   function guardar() {
     if (!transaccion || !billeteraId || !categoriaId) return;
     try {
+      if (esTransf) {
+        actualizarTransferencia(transaccion.id, { monto, fecha: fechaFinal });
+        onCerrar();
+        return;
+      }
       transaccionesRepo.actualizar(transaccion.id, {
         tipo,
         monto,
@@ -94,7 +105,7 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
 
   function eliminar() {
     if (!transaccion) return;
-    transaccionesRepo.eliminar(transaccion.id);
+    eliminarMovimiento(transaccion.id);
     onCerrar();
   }
 
@@ -102,7 +113,7 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
     <BottomSheet
       abierto={transaccion !== null}
       onCerrar={onCerrar}
-      titulo="Editar movimiento"
+      titulo={esTransf ? "Editar transferencia" : "Editar movimiento"}
       footer={
         <>
           <button
@@ -121,12 +132,14 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
             className="ios-press mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-ios py-2 text-[13px] font-semibold text-expense"
           >
             <Trash2 size={14} />
-            Eliminar movimiento
+            {esTransf ? "Eliminar transferencia" : "Eliminar movimiento"}
           </button>
         </>
       }
     >
       <div className="flex flex-col gap-4">
+        {!esTransf && (
+          <>
         {/* Toggle Gasto / Ingreso */}
         <div className="relative grid grid-cols-2 rounded-full bg-surface-line p-1">
           <div
@@ -153,6 +166,8 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
             Ingreso
           </button>
         </div>
+          </>
+        )}
 
         {/* Monto */}
         <div>
@@ -163,11 +178,13 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
             value={montoStr}
             onChange={(e) => setMontoStr(e.target.value)}
             className={`figure-amount w-full rounded-ios bg-surface p-3.5 text-center text-[22px] font-semibold shadow-card outline-none ${
-              tipo === "gasto" ? "text-expense" : "text-accent"
+              esTransf ? "text-ink" : tipo === "gasto" ? "text-expense" : "text-accent"
             }`}
           />
         </div>
 
+        {!esTransf && (
+          <>
         {/* Billetera */}
         <div>
           <p className="mb-2 text-[13px] font-semibold text-ink">Billetera</p>
@@ -190,7 +207,11 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
             })}
           </div>
         </div>
+          </>
+        )}
 
+        {!esTransf && (
+          <>
         {/* Categoría */}
         <div>
           <p className="mb-2 text-[13px] font-semibold text-ink">Categoría</p>
@@ -214,6 +235,8 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
             })}
           </div>
         </div>
+          </>
+        )}
 
         {/* Fecha */}
         <div>
@@ -249,6 +272,8 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
           )}
         </div>
 
+        {!esTransf && (
+          <>
         {/* Descripción */}
         <div>
           <p className="mb-2 text-[13px] font-semibold text-ink">Descripción</p>
@@ -261,6 +286,15 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
             className="w-full rounded-ios bg-surface p-3 text-[14px] text-ink shadow-card outline-none placeholder:text-ink-faint"
           />
         </div>
+          </>
+        )}
+
+        {esTransf && (
+          <p className="text-center text-[12px] leading-snug text-ink-faint">
+            Es una transferencia entre cuentas: el cambio de monto o fecha se aplica a las dos
+            cuentas a la vez. Para cambiar las cuentas, eliminala y hacela de nuevo.
+          </p>
+        )}
 
         {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
       </div>
