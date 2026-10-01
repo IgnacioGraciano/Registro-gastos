@@ -7,12 +7,11 @@ import {
   categoriasRepo,
   suscripcionesRepo,
   useCollection,
-  NOMBRE_CATEGORIA_TRANSFERENCIA,
   type Suscripcion,
 } from "@/lib/db";
 import { hoyISO } from "@/lib/format";
 import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
-import { categoriaAplicaA } from "@/lib/categoria-filtros";
+import { categoriaAplicaA, esCategoriaElegible } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
 
 interface Props {
@@ -37,7 +36,7 @@ export default function NuevaSuscripcionModal({ abierto, onCerrar, suscripcion }
   // Una suscripción siempre se debita como "gasto": se excluye la categoría de sistema
   // Transferencia y las categorías creadas específicamente para ingresos.
   const categorias = useCategoriasOrdenadas().filter(
-    (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, "gasto")
+    (c) => esCategoriaElegible(c) && categoriaAplicaA(c, "gasto")
   );
 
   const [nombre, setNombre] = useState("");

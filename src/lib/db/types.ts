@@ -63,6 +63,13 @@ export interface Suscripcion {
   categoriaId: string; // referencia a Categoria.id
   frecuencia: FrecuenciaSuscripcion;
   proximoPago: string; // formato "YYYY-MM-DD"
+  /**
+   * Día del mes en que se cobra "de verdad" (1-31). OPCIONAL: las
+   * suscripciones viejas no lo tienen y se usa el día de `proximoPago`.
+   * Hace falta porque en meses cortos el cobro se adelanta al último día
+   * (31 → 28 de febrero) y sin este dato el día quedaría corrido para siempre.
+   */
+  diaDeCobro?: number;
 }
 
 export interface Presupuesto {

@@ -28,16 +28,36 @@ function validar(data: Omit<Suscripcion, "id">): void {
   }
 }
 
-/** Suma un período (1 mes o 1 año) a una fecha "YYYY-MM-DD", sin librerías externas. */
-function avanzarPeriodo(fechaISO: string, frecuencia: Suscripcion["frecuencia"]): string {
-  const [anio, mes, dia] = fechaISO.split("-").map(Number);
-  const fecha = new Date(anio, mes - 1, dia);
+function diaDe(fechaISO: string): number {
+  return Number(fechaISO.split("-")[2]);
+}
+
+/**
+ * Suma un período (1 mes o 1 año) a una fecha "YYYY-MM-DD", sin librerías
+ * externas y sin pasar por `Date` (así no depende del huso horario).
+ *
+ * `diaDeCobro` es el día "real" de la suscripción: si el mes destino no
+ * tiene ese día (ej. 31 en febrero), se usa el último día de ese mes, y al
+ * mes siguiente vuelve al día original (31/01 → 28/02 → 31/03).
+ */
+function avanzarPeriodo(
+  fechaISO: string,
+  frecuencia: Suscripcion["frecuencia"],
+  diaDeCobro: number
+): string {
+  let [anio, mes] = fechaISO.split("-").map(Number); // mes 1-12
   if (frecuencia === "mensual") {
-    fecha.setMonth(fecha.getMonth() + 1);
+    mes += 1;
+    if (mes > 12) {
+      mes = 1;
+      anio += 1;
+    }
   } else {
-    fecha.setFullYear(fecha.getFullYear() + 1);
+    anio += 1;
   }
-  return fecha.toISOString().slice(0, 10);
+  const ultimoDiaDelMes = new Date(anio, mes, 0).getDate(); // día 0 del mes siguiente
+  const dia = Math.min(Math.max(1, Math.trunc(diaDeCobro)), ultimoDiaDelMes);
+  return `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
 
 export const suscripcionesRepo = {
@@ -45,7 +65,7 @@ export const suscripcionesRepo = {
 
   crear(data: Omit<Suscripcion, "id">): Suscripcion {
     validar(data);
-    return base.create(data);
+    return base.create({ ...data, diaDeCobro: diaDe(data.proximoPago) });
   },
 
   actualizar(id: string, patch: Partial<Omit<Suscripcion, "id">>): Suscripcion | null {
@@ -53,7 +73,10 @@ export const suscripcionesRepo = {
     if (!anterior) return null;
     const siguiente = { ...anterior, ...patch };
     validar(siguiente);
-    return base.update(id, patch);
+    // Sólo si el usuario cambió la fecha a mano se toma su día como nuevo día de
+    // cobro; si no, se conserva el original (puede estar "adelantado" por un mes corto).
+    const cambioFecha = patch.proximoPago !== undefined && patch.proximoPago !== anterior.proximoPago;
+    return base.update(id, cambioFecha ? { ...patch, diaDeCobro: diaDe(siguiente.proximoPago) } : patch);
   },
 
   eliminar(id: string): boolean {
@@ -64,8 +87,10 @@ export const suscripcionesRepo = {
   registrarPago(id: string): Suscripcion | null {
     const actual = base.getById(id);
     if (!actual) return null;
+    const diaDeCobro = actual.diaDeCobro ?? diaDe(actual.proximoPago);
     return base.update(id, {
-      proximoPago: avanzarPeriodo(actual.proximoPago, actual.frecuencia),
+      proximoPago: avanzarPeriodo(actual.proximoPago, actual.frecuencia, diaDeCobro),
+      diaDeCobro,
     });
   },
 

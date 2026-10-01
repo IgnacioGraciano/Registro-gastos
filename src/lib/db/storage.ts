@@ -100,15 +100,33 @@ export function exportarTodoElStorage(): Record<string, string> {
 }
 
 /**
- * Restaura un backup generado por `exportarTodoElStorage`. Sobrescribe lo
- * que ya hubiera guardado bajo esas mismas claves. Sólo escribe claves con
+ * Restaura un backup generado por `exportarTodoElStorage`. REEMPLAZA todos
+ * los datos actuales de la app por los del backup. Sólo toca claves con
  * el prefijo `gg:` (nunca toca otra cosa que hubiera en el localStorage del
  * dominio, por si en algún momento conviviera con otra app).
  */
 export function importarTodoElStorage(datos: Record<string, string>): void {
   if (!esNavegador()) return;
-  for (const [key, valor] of Object.entries(datos)) {
-    if (!key.startsWith(PREFIJO)) continue;
+
+  const entradas = Object.entries(datos).filter(
+    ([key, valor]) => key.startsWith(PREFIJO) && typeof valor === "string"
+  );
+  // Si el archivo no trae nada de esta app, no se toca nada (evita vaciar la app por error).
+  if (entradas.length === 0) {
+    throw new Error("El backup no contiene datos de esta app.");
+  }
+
+  // Reemplazo real: primero se borran TODAS las claves propias actuales. Una
+  // colección vacía no se exporta (su clave no existe), así que sin este paso
+  // lo que hubiera hoy en esa colección sobreviviría mezclado con el backup.
+  const clavesActuales: string[] = [];
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const key = window.localStorage.key(i);
+    if (key && key.startsWith(PREFIJO)) clavesActuales.push(key);
+  }
+  clavesActuales.forEach((key) => window.localStorage.removeItem(key));
+
+  for (const [key, valor] of entradas) {
     try {
       window.localStorage.setItem(key, valor);
     } catch (error) {

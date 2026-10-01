@@ -75,7 +75,8 @@ export function esSuscripcion(v: unknown): v is Suscripcion {
     esString(v.billeteraId) &&
     esString(v.categoriaId) &&
     (v.frecuencia === "mensual" || v.frecuencia === "anual") &&
-    esFechaISO(v.proximoPago)
+    esFechaISO(v.proximoPago) &&
+    (v.diaDeCobro === undefined || esNumeroFinito(v.diaDeCobro))
   );
 }
 

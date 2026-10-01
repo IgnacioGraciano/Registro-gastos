@@ -13,7 +13,7 @@ import {
 } from "@/lib/db";
 import { calcularProgresoPresupuestos, inicioDeMes } from "@/lib/dashboard";
 import { formatMonto } from "@/lib/format";
-import { categoriaAplicaA } from "@/lib/categoria-filtros";
+import { categoriaAplicaA, esCategoriaElegible } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import BottomSheet from "@/components/BottomSheet";
 
@@ -42,10 +42,7 @@ export default function PresupuestosSection() {
   // Sólo categorías de gasto (con Transferencia y Préstamo ya excluidas, porque el capital
   // prestado no es un gasto real: sólo lo es la eventual pérdida, categorizada aparte).
   const categoriasDeGasto = categorias.filter(
-    (c) =>
-      c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA &&
-      c.nombre !== NOMBRE_CATEGORIA_PRESTAMO &&
-      categoriaAplicaA(c, "gasto")
+    (c) => esCategoriaElegible(c) && categoriaAplicaA(c, "gasto")
   );
 
   function abrirEdicion(catId: string) {

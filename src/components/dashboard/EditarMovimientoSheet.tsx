@@ -7,12 +7,11 @@ import {
   categoriasRepo,
   transaccionesRepo,
   useCollection,
-  NOMBRE_CATEGORIA_TRANSFERENCIA,
   type Transaccion,
 } from "@/lib/db";
 import { ayerISO, hoyISO } from "@/lib/format";
 import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
-import { categoriaAplicaA } from "@/lib/categoria-filtros";
+import { categoriaAplicaA, esCategoriaElegible } from "@/lib/categoria-filtros";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import BottomSheet from "@/components/BottomSheet";
 
@@ -59,7 +58,7 @@ export default function EditarMovimientoSheet({ transaccion, onCerrar }: Props) 
   if (!transaccion) return null;
 
   const categoriasDisponibles = categorias.filter(
-    (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, tipo)
+    (c) => esCategoriaElegible(c) && categoriaAplicaA(c, tipo)
   );
 
   const monto = parseFloat(montoStr.replace(",", "."));

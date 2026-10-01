@@ -33,6 +33,8 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
   const [billeteraId, setBilleteraId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [confirmarEliminarId, setConfirmarEliminarId] = useState<string | null>(null);
+
   const [montoPago, setMontoPago] = useState("");
   const [fechaPago, setFechaPago] = useState(hoyISO());
 
@@ -48,6 +50,7 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
       setMontoPago("");
       setFechaPago(hoyISO());
       setError(null);
+      setConfirmarEliminarId(null);
     }
   }, [abierto]);
 
@@ -117,7 +120,18 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
     }
   }
 
+  function eliminarPrestamo(id: string) {
+    try {
+      prestamosRepo.eliminar(id);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar el préstamo.");
+    }
+    setConfirmarEliminarId(null);
+  }
+
   function abrirModalPago(prestamo: Prestamo) {
+    setConfirmarEliminarId(null);
     setPrestamoSeleccionado(prestamo);
     setModo("pago");
     setMontoPago("");
@@ -244,12 +258,42 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => prestamosRepo.eliminar(p.id)}
+                        onClick={() => {
+                          setError(null);
+                          setConfirmarEliminarId(p.id);
+                        }}
+                        aria-label={`Eliminar préstamo a ${p.persona}`}
                         className="ios-press flex h-9 w-9 items-center justify-center rounded-ios bg-expense-soft text-expense"
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
+
+                    {confirmarEliminarId === p.id && (
+                      <div className="mt-2 rounded-ios bg-expense-soft p-3">
+                        <p className="mb-2 text-center text-[12.5px] font-medium text-expense">
+                          {p.montoPagado > 0
+                            ? `¿Eliminar este préstamo? Vuelven ${formatMonto(pendiente, moneda)} a la cuenta (lo que faltaba cobrar). Lo ya cobrado no se toca.`
+                            : `¿Eliminar este préstamo? Vuelven ${formatMonto(pendiente, moneda)} a la cuenta, como si no lo hubieras prestado.`}
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setConfirmarEliminarId(null)}
+                            className="ios-press flex-1 rounded-ios bg-surface py-2 text-[13px] font-semibold text-ink"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => eliminarPrestamo(p.id)}
+                            className="ios-press flex-1 rounded-ios bg-expense py-2 text-[13px] font-semibold text-white"
+                          >
+                            Sí, eliminar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -257,6 +301,8 @@ export default function PrestamosSheet({ abierto, onCerrar }: Props) {
           ) : (
             <p className="py-4 text-center text-[13px] text-ink-faint">Sin préstamos registrados.</p>
           )}
+
+          {error && <p className="text-center text-[12.5px] font-medium text-expense">{error}</p>}
         </div>
       )}
 

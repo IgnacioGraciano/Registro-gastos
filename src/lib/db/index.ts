@@ -21,6 +21,11 @@ export { suscripcionesRepo } from "./suscripciones";
 export { presupuestosRepo } from "./presupuestos";
 export { prestamosRepo, migrarPrestamosZustand } from "./prestamos";
 export { registrarTransferencia } from "./transferencias";
+export {
+  contarMovimientosDeBilletera,
+  eliminarBilleteraSegura,
+  motivoNoSePuedeEliminarBilletera,
+} from "./eliminarBilletera";
 export { exportarTodoElStorage, importarTodoElStorage } from "./storage";
 export { procesarDebitosPendientes } from "./debitos";
 export type { ResultadoDebito } from "./debitos";

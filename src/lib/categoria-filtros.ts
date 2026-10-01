@@ -9,6 +9,17 @@ export function categoriaAplicaA(categoria: Categoria, tipo: "gasto" | "ingreso"
   return categoria.tipo === undefined || categoria.tipo === "ambos" || categoria.tipo === tipo;
 }
 
+/**
+ * Categorías que el usuario puede elegir a mano (carga, edición, suscripciones,
+ * presupuestos). Quedan afuera las de sistema (Transferencia, Préstamo,
+ * Ganancia/Pérdida de préstamo): las maneja la app por dentro y todas se
+ * crean con `esEditable: false`. Cargar algo a mano en "Préstamo", por
+ * ejemplo, movería el saldo sin aparecer en el historial ni en los totales.
+ */
+export function esCategoriaElegible(categoria: Categoria): boolean {
+  return categoria.esEditable;
+}
+
 /** Paleta de colores elegibles al crear/editar una categoría, y fallback cíclico para las que no tienen color propio. */
 export const PALETA_COLORES_CATEGORIA = [
   "#1FBE82", // verde esmeralda

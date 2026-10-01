@@ -7,12 +7,11 @@ import {
   categoriasRepo,
   transaccionesRepo,
   useCollection,
-  NOMBRE_CATEGORIA_TRANSFERENCIA,
 } from "@/lib/db";
 import { ayerISO, hoyISO } from "@/lib/format";
 import { obtenerIconoCategoria } from "@/lib/icons";
 import { useCategoriasOrdenadas } from "@/lib/useCategoriasOrdenadas";
-import { categoriaAplicaA } from "@/lib/categoria-filtros";
+import { categoriaAplicaA, esCategoriaElegible } from "@/lib/categoria-filtros";
 
 type Tecla =
   | { tipo: "digito"; valor: string }
@@ -76,7 +75,7 @@ export default function NuevaCargaPage() {
   // La categoría de sistema "Transferencia" no se ofrece para cargas manuales,
   // y sólo se muestran las categorías que aplican al tipo elegido (Gasto/Ingreso).
   const categoriasDisponibles = categorias.filter(
-    (c) => c.nombre !== NOMBRE_CATEGORIA_TRANSFERENCIA && categoriaAplicaA(c, tipo)
+    (c) => esCategoriaElegible(c) && categoriaAplicaA(c, tipo)
   );
 
   function cambiarTipo(nuevoTipo: "gasto" | "ingreso") {

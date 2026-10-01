@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft } from "lucide-react";
 import {
   billeterasRepo,
@@ -47,7 +48,15 @@ export default function HistorialCompletoOverlay({
   const prestamos = useCollection(prestamosRepo);
   const [enEdicion, setEnEdicion] = useState<Transaccion | null>(null);
 
-  if (!abierto) return null;
+  // Se renderiza en `#app-overlays` (igual que BottomSheet) y no en el lugar
+  // donde se lo invoca: ahí adentro quedaba posicionado contra el contenido
+  // scrolleable, y si la página estaba scrolleada se abría fuera de pantalla.
+  const [portalRoot, setPortalRoot] = useState<Element | null>(null);
+  useEffect(() => {
+    setPortalRoot(document.getElementById("app-overlays"));
+  }, []);
+
+  if (!abierto || !portalRoot) return null;
 
   const desde = desdeHasta?.desde ?? (soloMesActual ? inicioDeMes() : null);
   const hasta = desdeHasta?.hasta ?? null;
@@ -92,8 +101,8 @@ export default function HistorialCompletoOverlay({
     })),
   ].sort(compararRecientePrimero);
 
-  return (
-    <div className="absolute inset-0 z-[80] flex flex-col bg-surface-base">
+  return createPortal(
+    <div className="pointer-events-auto absolute inset-0 z-[80] flex flex-col bg-surface-base">
       <header className="flex shrink-0 items-center gap-3 border-b border-surface-line bg-surface-base px-5 pb-3 pt-[calc(var(--safe-top)+14px)]">
         <button
           type="button"
@@ -143,6 +152,7 @@ export default function HistorialCompletoOverlay({
       </div>
 
       <EditarMovimientoSheet transaccion={enEdicion} onCerrar={() => setEnEdicion(null)} />
-    </div>
+    </div>,
+    portalRoot
   );
 }

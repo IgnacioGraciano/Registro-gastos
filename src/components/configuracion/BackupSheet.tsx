@@ -63,7 +63,13 @@ export default function BackupSheet({ abierto, onCerrar }: Props) {
 
   function confirmarImportacion() {
     if (!pendienteDeConfirmar) return;
-    importarTodoElStorage(pendienteDeConfirmar);
+    try {
+      importarTodoElStorage(pendienteDeConfirmar);
+    } catch (err) {
+      setPendienteDeConfirmar(null);
+      setError(err instanceof Error ? err.message : "No se pudo importar el backup.");
+      return;
+    }
     window.location.reload(); // recarga para que toda la app lea los datos restaurados desde cero
   }
 

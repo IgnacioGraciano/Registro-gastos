@@ -265,11 +265,22 @@ export const prestamosRepo = {
     base.remove(prestamoId);
   },
 
-  /** Elimina el préstamo y revierte el gasto original vinculado. */
+  /**
+   * Elimina el préstamo devolviendo a la billetera SÓLO lo que todavía no se
+   * había cobrado. Si ya hubo cobros parciales, esa plata ya volvió a la
+   * billetera: revertir el gasto original entero la contaría dos veces. Por
+   * eso, en ese caso el gasto original se reduce a lo efectivamente cobrado
+   * (queda compensado con los cobros, ambos en la categoría "Préstamo", que
+   * no cuenta en totales ni aparece en el historial).
+   */
   eliminar(id: string): boolean {
     const prestamo = base.getById(id);
     if (!prestamo) return false;
-    transaccionesRepo.eliminar(prestamo.transaccionId);
+    if (prestamo.montoPagado > 0) {
+      transaccionesRepo.actualizar(prestamo.transaccionId, { monto: prestamo.montoPagado });
+    } else {
+      transaccionesRepo.eliminar(prestamo.transaccionId);
+    }
     return base.remove(id);
   },
 };

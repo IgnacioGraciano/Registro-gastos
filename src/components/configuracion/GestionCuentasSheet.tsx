@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import { Check, Pencil, Plus, RotateCcw, Trash2, Wallet, X } from "lucide-react";
-import { billeterasRepo, useCollection, useMoneda } from "@/lib/db";
+import {
+  billeterasRepo,
+  contarMovimientosDeBilletera,
+  eliminarBilleteraSegura,
+  motivoNoSePuedeEliminarBilletera,
+  useCollection,
+  useMoneda,
+} from "@/lib/db";
 import { formatMonto } from "@/lib/format";
 import BottomSheet from "@/components/BottomSheet";
 
@@ -22,6 +29,7 @@ export default function GestionCuentasSheet({ abierto, onCerrar }: Props) {
   const [saldoNueva, setSaldoNueva] = useState("");
 
   const [confirmarReset, setConfirmarReset] = useState(false);
+  const [confirmarEliminarId, setConfirmarEliminarId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function empezarEdicion(id: string, saldoActual: number) {
@@ -40,6 +48,29 @@ export default function GestionCuentasSheet({ abierto, onCerrar }: Props) {
     billeterasRepo.establecerSaldo(editandoId, nuevoSaldo);
     setEditandoId(null);
     setError(null);
+  }
+
+  /** Primer toque en el tacho: o avisa por qué no se puede, o pide confirmación. */
+  function pedirEliminar(id: string) {
+    const motivo = motivoNoSePuedeEliminarBilletera(id);
+    if (motivo) {
+      setConfirmarEliminarId(null);
+      setError(motivo);
+      return;
+    }
+    setError(null);
+    setConfirmarEliminarId(id);
+  }
+
+  function confirmarEliminar() {
+    if (!confirmarEliminarId) return;
+    try {
+      eliminarBilleteraSegura(confirmarEliminarId);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar la cuenta.");
+    }
+    setConfirmarEliminarId(null);
   }
 
   function crear() {
@@ -121,7 +152,7 @@ export default function GestionCuentasSheet({ abierto, onCerrar }: Props) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => billeterasRepo.eliminar(b.id)}
+                        onClick={() => pedirEliminar(b.id)}
                         aria-label={`Eliminar ${b.nombre}`}
                         className="ios-press flex h-8 w-8 items-center justify-center rounded-full bg-expense-soft text-expense"
                       >
@@ -130,6 +161,35 @@ export default function GestionCuentasSheet({ abierto, onCerrar }: Props) {
                     </>
                   )}
                 </div>
+
+                {confirmarEliminarId === b.id && (
+                  <div className="mt-3 rounded-ios bg-expense-soft p-3">
+                    <p className="mb-2 text-center text-[12.5px] font-medium text-expense">
+                      {(() => {
+                        const movimientos = contarMovimientosDeBilletera(b.id);
+                        return movimientos > 0
+                          ? `¿Eliminar "${b.nombre}"? Sus ${movimientos} movimiento${movimientos > 1 ? "s" : ""} quedan en el historial, pero sin cuenta asignada.`
+                          : `¿Eliminar "${b.nombre}"?`;
+                      })()}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmarEliminarId(null)}
+                        className="ios-press flex-1 rounded-ios bg-surface py-2 text-[13px] font-semibold text-ink"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmarEliminar}
+                        className="ios-press flex-1 rounded-ios bg-expense py-2 text-[13px] font-semibold text-white"
+                      >
+                        Sí, eliminar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
